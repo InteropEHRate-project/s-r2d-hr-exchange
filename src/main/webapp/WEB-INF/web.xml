@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app	version="3.0"
+			xmlns="http://Java.sun.com/xml/ns/javaee" 
+			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+			xsi:schemaLocation="http://java.sun.com/xml/ns/javaee	http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+
+	<display-name>ASYNC R2D-ACCESS SERVER</display-name>
+
+   <!-- 
+		Spring MVC Servlet implementing R2D-EHR additional services
+	-->	
+	<servlet>
+		<servlet-name>R2DServerAdditionalServices</servlet-name>
+		<servlet-class>
+			org.springframework.web.servlet.DispatcherServlet
+		</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>R2DServerAdditionalServices</servlet-name>
+		<url-pattern>/services/*</url-pattern>
+	</servlet-mapping>
+	
+   <!-- 
+		Servlet implementing R2D-EHR service implementation
+	-->	
+	<servlet>
+		<servlet-name>R2DAccessServer</servlet-name>
+		<servlet-class>eu.interopehrate.r2d.R2DAccessServer</servlet-class>
+		<load-on-startup>2</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>R2DAccessServer</servlet-name>
+		<url-pattern>/r2da/*</url-pattern>
+	</servlet-mapping>	
+
+	<filter>
+		<filter-name>R2DAccess Server Authentication Filter</filter-name>
+		<filter-class>eu.interopehrate.r2d.security.AuthenticatorFilter</filter-class>
+		<init-param>
+			<param-name>EHR_SERVICE_CREDENTIALS</param-name>
+			<param-value>ehrservice@interopehrate.eu:int3rop3hr@t3</param-value> 
+		</init-param>
+		<init-param>
+			<param-name>EHR_SERVICE_URLS</param-name>
+			<param-value>/iehr/services/callbacks/*</param-value> 
+		</init-param>
+		<init-param>
+			<param-name>CITIZEN_URLS</param-name>
+			<param-value>
+			/iehr/r2da/*, 
+			/iehr/services/requests/*
+			</param-value> 
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>R2DAccess Server Authentication Filter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+
+</web-app>

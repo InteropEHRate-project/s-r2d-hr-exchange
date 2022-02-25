@@ -1,0 +1,50 @@
+package eu.interopehrate.r2d.providers;
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Patient;
+import org.springframework.stereotype.Service;
+
+import ca.uhn.fhir.rest.annotation.Operation;
+import ca.uhn.fhir.rest.annotation.Search;
+import ca.uhn.fhir.rest.server.exceptions.NotImplementedOperationException;
+import eu.interopehrate.r2d.exceptions.R2DException;
+import eu.interopehrate.r2d.model.R2DRequest;
+import eu.interopehrate.r2d.security.SecurityConstants;
+
+@Service
+public class PatientResourceProvider extends AbstractResourceProvider {
+
+	@Override
+	public Class<? extends IBaseResource> getResourceType() {
+		return Patient.class;
+	}
+
+	@Search
+	public List<Patient> search() throws R2DException {
+		throw new NotImplementedOperationException("Sorry, this request is not yet implemented...");
+	}
+	
+
+	@Operation(name="$everything", idempotent=true)
+	public Bundle everything(HttpServletRequest theRequest) throws R2DException {
+		throw new NotImplementedOperationException("Sorry, this request is not yet implemented...");
+	}
+	
+	
+	@Operation(name="$patient-summary", idempotent=true)
+	public Bundle patientSummary(HttpServletRequest theRequest) throws R2DException {
+		// sends the request to the EHR
+		R2DRequest r2dRequest = (R2DRequest) theRequest.getAttribute(SecurityConstants.R2D_REQUEST_ID_PARAM_NAME);
+		String authHeader = theRequest.getHeader(SecurityConstants.AUTH_HEADER);
+		// starts request processing
+		requestProcessor.startRequestProcessing(r2dRequest, authHeader);
+		
+		return new Bundle();
+	}
+
+}
