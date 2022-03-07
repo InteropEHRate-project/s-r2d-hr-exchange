@@ -91,7 +91,7 @@ public class RequestProcessorImpl implements RequestProcessor {
 
 	
 	@Override
-	public R2DRequest startRequestProcessing(R2DRequest r2dRequest, String eidasPersonIdentifier) throws R2DException {
+	public R2DRequest startRequestProcessing(R2DRequest r2dRequest, String eidasPersonIdentifier, String authToken) throws R2DException {
 		if (r2dRequest.getStatus() != RequestStatus.NEW)
 			throw new R2DException(
 					R2DException.INVALID_STATE, 
@@ -118,20 +118,19 @@ public class RequestProcessorImpl implements RequestProcessor {
 						eidasPersonIdentifier, r2dRequest.getUri(), 
 						from, to);
 				// retrieves the most recent equivalent request if one
-				logger.debug(String.format("Found %d cached request(s)", requests.size()));
 				if (requests.size() > 0)
 					equivalentRequest = requests.get(0);
 			} 
 			
 			if (equivalentRequest != null) {
 				// #2.1 if there is an equivalent request
-				logger.debug("Found a valid cached response: " + equivalentRequest.getId());
-				r2dRequest.addResponseId(equivalentRequest.getId());
+				logger.debug("Found a valid cached response: " + equivalentRequest.getFirstResponseId());
+				r2dRequest.addResponseId(equivalentRequest.getFirstResponseId());
 				r2dRequest.setStatus(RequestStatus.COMPLETED);
 			} else {
 				// #2.2 if there is no cached response sends the request to the EHR
 				logger.debug("No cached response, sends request to EHR...");
-				ehrService.sendRequest(r2dRequest, eidasPersonIdentifier);
+				ehrService.sendRequest(r2dRequest, authToken);
 				r2dRequest.setStatus(RequestStatus.RUNNING);
 			}
 			

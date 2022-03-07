@@ -24,7 +24,7 @@ public interface RequestProcessor {
 	 * @return
 	 * @throws R2DException
 	 */
-	public R2DRequest startRequestProcessing(R2DRequest r2dRequest, String eidasPersonIdentifier) throws R2DException;
+	public R2DRequest startRequestProcessing(R2DRequest r2dRequest, String eidasPersonIdentifier, String authToken) throws R2DException;
 
 		
 	/**

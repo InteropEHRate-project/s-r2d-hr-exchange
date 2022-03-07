@@ -27,17 +27,11 @@ public final class SecurityConstants {
 	/**
 	 * key for the instance of authenticated user stored as request attribute
 	 */
-	public final static String EIDAS_PERSON_ID_ATTR_NAME = "Eidas-Person-Identifier";
+	public final static String CITIZEN_ATTR_NAME = "eIDAS-Citizen";
 	
 	/**
 	 * key for storing the id of the R2D Request before sending it to EHR
 	 */
 	public static final String R2D_REQUEST_ID_PARAM_NAME = "R2D-Request-Id";
-	
-	/**
-	 * key for storing the id of the R2D Eidas Token before sending it to EHR
-	 */
-	public static final String R2D_REQUEST_CITIZEN_PARAM_NAME = "R2D-Citizen-Token";
-
 
 }

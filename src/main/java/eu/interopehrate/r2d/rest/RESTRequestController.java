@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import eu.interopehrate.r2d.Configuration;
 import eu.interopehrate.r2d.dao.RequestRepository;
 import eu.interopehrate.r2d.dao.ResponseRepository;
+import eu.interopehrate.r2d.model.Citizen;
 import eu.interopehrate.r2d.model.R2DRequest;
 import eu.interopehrate.r2d.model.R2DResponse;
 import eu.interopehrate.r2d.model.RequestOutcome;
@@ -45,18 +46,17 @@ public class RESTRequestController {
 	@GetMapping(produces = "application/json")
 	public Collection<R2DRequest> listRequests(HttpServletRequest theRequest,
 			HttpServletResponse theResponse) {
-		String eidasPersonIdentifier = 
-				(String)theRequest.getAttribute(SecurityConstants.EIDAS_PERSON_ID_ATTR_NAME);
+
+		Citizen citizen = (Citizen)theRequest.getAttribute(SecurityConstants.CITIZEN_ATTR_NAME);
 		
-		return requestRepository.findByCitizenId(eidasPersonIdentifier);
+		return requestRepository.findByCitizenId(citizen.getPersonIdentifier());
 	}
 	
 	@GetMapping(path = "/test", produces = "application/json")
 	public List<R2DRequest> test(HttpServletRequest theRequest, 
 			HttpServletResponse theResponse) throws IOException {
-		String eidasPersonIdentifier = 
-				(String)theRequest.getAttribute(SecurityConstants.EIDAS_PERSON_ID_ATTR_NAME);
 		
+		Citizen citizen = (Citizen)theRequest.getAttribute(SecurityConstants.CITIZEN_ATTR_NAME);
 		
 		// #1 Checks if citizen has already submitted 2 requests in the last 24 hours
 		
@@ -74,9 +74,9 @@ public class RESTRequestController {
 		
 		System.out.println(from);
 		System.out.println(to);
-		System.out.println(eidasPersonIdentifier);
+		System.out.println(citizen.getPersonIdentifier());
 		List<R2DRequest> requests = requestRepository.findEquivalentValidRequest(
-				eidasPersonIdentifier, "/Encounter?status=finished",
+				citizen.getPersonIdentifier(), "/Encounter?status=finished",
 				from, to);
 
 		return requests;
@@ -85,10 +85,9 @@ public class RESTRequestController {
 	@GetMapping(path = "/{theRequestId}", produces = "application/json")
 	public R2DRequest getRequestById(@PathVariable String theRequestId, HttpServletRequest theRequest, 
 			HttpServletResponse theResponse) throws IOException {
-		String eidasPersonIdentifier = 
-				(String)theRequest.getAttribute(SecurityConstants.EIDAS_PERSON_ID_ATTR_NAME);
+		Citizen citizen = (Citizen)theRequest.getAttribute(SecurityConstants.CITIZEN_ATTR_NAME);
 		
-		Optional<R2DRequest> opt = requestRepository.findByRequestIdAndCitizenId(theRequestId, eidasPersonIdentifier);
+		Optional<R2DRequest> opt = requestRepository.findByRequestIdAndCitizenId(theRequestId, citizen.getPersonIdentifier());
 		if (!opt.isPresent()) {
 			theResponse.sendError(HttpServletResponse.SC_NOT_FOUND, String.format(
 					"Request with id %s not found or not belonging to requesting citizen.", theRequestId));
@@ -102,10 +101,9 @@ public class RESTRequestController {
 	public RequestOutcome monitorRequestStatus(@PathVariable String theRequestId,
 			HttpServletRequest theRequest, HttpServletResponse theResponse) throws IOException {
 		
-		String eidasPersonIdentifier = 
-				(String)theRequest.getAttribute(SecurityConstants.EIDAS_PERSON_ID_ATTR_NAME);
+		Citizen citizen = (Citizen)theRequest.getAttribute(SecurityConstants.CITIZEN_ATTR_NAME);
 		
-		Optional<R2DRequest> opt = requestRepository.findByRequestIdAndCitizenId(theRequestId, eidasPersonIdentifier);
+		Optional<R2DRequest> opt = requestRepository.findByRequestIdAndCitizenId(theRequestId, citizen.getPersonIdentifier());
 		if (opt.isPresent()) {
 			R2DRequest theR2DRequest = opt.get();
 			if (theR2DRequest.getStatus() == RequestStatus.RUNNING) {
@@ -140,9 +138,8 @@ public class RESTRequestController {
 			HttpServletRequest httpRequest, HttpServletResponse httpResponse) throws IOException {
 
 		// Checks if requests belongs to requesting citizen
-		String eidasPersonIdentifier = 
-				(String)httpRequest.getAttribute(SecurityConstants.EIDAS_PERSON_ID_ATTR_NAME);
-		Optional<R2DRequest> opt = requestRepository.findByRequestIdAndCitizenId(theRequestId, eidasPersonIdentifier);
+		Citizen citizen = (Citizen)httpRequest.getAttribute(SecurityConstants.CITIZEN_ATTR_NAME);
+		Optional<R2DRequest> opt = requestRepository.findByRequestIdAndCitizenId(theRequestId, citizen.getPersonIdentifier());
 		if (!opt.isPresent()) {
 			httpResponse.sendError(HttpServletResponse.SC_NOT_FOUND, String.format(
 					"Request with id %s not found or not belonging to requesting citizen.", theRequestId));

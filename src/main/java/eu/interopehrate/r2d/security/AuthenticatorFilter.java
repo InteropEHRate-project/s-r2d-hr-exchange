@@ -18,8 +18,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 
+import eu.interopehrate.r2d.model.Citizen;
 import eu.interopehrate.sr2dsm.SR2DSM;
 import eu.interopehrate.sr2dsm.model.ResponseDetails;
+import eu.interopehrate.sr2dsm.model.UserDetails;
 
 public class AuthenticatorFilter implements Filter {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticatorFilter.class);
@@ -91,7 +93,7 @@ public class AuthenticatorFilter implements Filter {
 				LOGGER.debug("Verifying EIDAS token...");
 				String oAuthToken = authHeaderParam.substring(SecurityConstants.OAUTH_PREFIX.length()).trim();
 				ResponseDetails tokenDetails = SR2DSM.decode(oAuthToken);
-				request.setAttribute(SecurityConstants.EIDAS_PERSON_ID_ATTR_NAME, tokenDetails.getUserDetails().getPersonIdentifier());
+				request.setAttribute(SecurityConstants.CITIZEN_ATTR_NAME, createCitizen(tokenDetails));
 			    LOGGER.info("Request contains a valid authtentication token for citizen " + tokenDetails.getUserDetails().getPersonIdentifier());
 			} catch (Exception e) {
 				LOGGER.error("Authentication token is not valid! Request cannot be processed.", e);
@@ -107,6 +109,19 @@ public class AuthenticatorFilter implements Filter {
 		}
 		
 	    chain.doFilter(request, response);
+	}
+	
+	
+	private Citizen createCitizen(ResponseDetails tokenDetails) {
+		UserDetails user = tokenDetails.getUserDetails();
+		
+		Citizen c = new Citizen();
+		c.setFirstName(user.getFirstName());
+		c.setFamilyName(user.getFamilyName());
+		c.setDateOfBirth(user.getDateOfBirth());
+		c.setPersonIdentifier(user.getPersonIdentifier());
+		
+		return c;
 	}
 	
 	@Override

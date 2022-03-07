@@ -27,12 +27,14 @@ import eu.interopehrate.r2d.security.SecurityConstants;
 public class RESTEHRService implements EHRService {
 	
 	private static final Log logger = LogFactory.getLog(RESTEHRService.class);
+	/**
+	 * key for storing the id of the R2D Eidas Token before sending it to EHR
+	 */
+	private static final String R2D_REQUEST_CITIZEN_PARAM_NAME = "eIDAS-Citizen-Token";
 
 	@Override
 	public void sendRequest(R2DRequest r2dRequest, String authToken) throws R2DException {
-		// Creates the forward URL 
-		// starting URL: http://r2d.com/r2da/Encounter?date=2020-01-01&_sort=date
-		// forward  URL: http://ehr.com/r2da/Encounter?date=2020-01-01&_sort=date
+		// Creates the EHR-MW service URL 
 		StringBuilder serviceURL = new StringBuilder(Configuration.getEHRMWContextPath());
 		serviceURL.append(r2dRequest.getUri());
 		
@@ -47,11 +49,11 @@ public class RESTEHRService implements EHRService {
 		final byte[] encodedBytes = Base64.getEncoder().encode(credentials.getBytes());
 		httpGet.addHeader(SecurityConstants.AUTH_HEADER, SecurityConstants.BASIC_PREFIX + new String(encodedBytes));
 		// #2.3 adds eidas token
-		httpGet.addHeader(SecurityConstants.R2D_REQUEST_CITIZEN_PARAM_NAME, authToken);
+		httpGet.addHeader(R2D_REQUEST_CITIZEN_PARAM_NAME, authToken);
 
 		// #3 Sends request
 		try {
-			logger.debug(String.format("Forwarding request with id %s to EHR-MW...", r2dRequest.getId()));
+			logger.debug(String.format("Inovked EHR-MW service for request with id %s", r2dRequest.getId()));
 			// Creates the HttpClient
 			CloseableHttpClient httpclient = HttpClients.createDefault();
 			CloseableHttpResponse response = httpclient.execute(httpGet);

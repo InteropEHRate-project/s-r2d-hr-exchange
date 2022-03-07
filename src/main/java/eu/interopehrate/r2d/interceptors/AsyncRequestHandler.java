@@ -19,6 +19,7 @@ import eu.interopehrate.r2d.Configuration;
 import eu.interopehrate.r2d.R2DContextProvider;
 import eu.interopehrate.r2d.business.RequestProcessor;
 import eu.interopehrate.r2d.exceptions.R2DException;
+import eu.interopehrate.r2d.model.Citizen;
 import eu.interopehrate.r2d.model.R2DRequest;
 import eu.interopehrate.r2d.security.SecurityConstants;
 
@@ -53,14 +54,12 @@ public class AsyncRequestHandler {
 			return;
 		}
 		
-		logger.debug(String.format("Received R2DA request: %s", theRequestDetails.getCompleteUrl()));
-		String eidasPersonIdentifier = 
-				(String)theRequest.getAttribute(SecurityConstants.EIDAS_PERSON_ID_ATTR_NAME);
-		
+		logger.debug(String.format("Received R2DA request: %s", theRequestDetails.getCompleteUrl()));		
+		Citizen citizen = (Citizen)theRequest.getAttribute(SecurityConstants.CITIZEN_ATTR_NAME);
 		// Creates the new R2DRequest
 		R2DRequest r2dRequest = requestProcessor.newIncomingRequest(
 				theRequestDetails.getCompleteUrl(), 
-				eidasPersonIdentifier);
+				citizen.getPersonIdentifier());
 
 		// store the R2DRequest id in the HttpRequest 
 		theRequest.setAttribute(SecurityConstants.R2D_REQUEST_ID_PARAM_NAME, r2dRequest);
