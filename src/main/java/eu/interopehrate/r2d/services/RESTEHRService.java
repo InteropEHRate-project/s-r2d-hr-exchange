@@ -50,6 +50,8 @@ public class RESTEHRService implements EHRService {
 		httpGet.addHeader(SecurityConstants.AUTH_HEADER, SecurityConstants.BASIC_PREFIX + new String(encodedBytes));
 		// #2.3 adds eidas token
 		httpGet.addHeader(R2D_REQUEST_CITIZEN_PARAM_NAME, authToken);
+		// #2.4 add language header
+		httpGet.addHeader("Accept-Language", r2dRequest.getPreferredLanguages());		
 
 		// #3 Sends request
 		try {

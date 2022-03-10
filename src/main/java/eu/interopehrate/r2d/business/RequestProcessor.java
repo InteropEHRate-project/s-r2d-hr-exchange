@@ -9,11 +9,14 @@ public interface RequestProcessor {
 	 * 
 	 * @param r2dUrl: URL of the requested service
 	 * @param eidasPersonIdentifier: eidasIdentifier of the requesting citizen
+	 * @param preferredLanguages: list of preferred languages of the citizen
 	 * 
 	 * @return
 	 * @throws R2DException
 	 */
-	public R2DRequest newIncomingRequest(String r2dUrl, String eidasPersonIdentifier) throws R2DException;
+	public R2DRequest newIncomingRequest(String r2dUrl, 
+			String eidasPersonIdentifier,
+			String preferredLanguages) throws R2DException;
 
 
 	/**

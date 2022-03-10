@@ -1,5 +1,9 @@
 package eu.interopehrate.r2d.interceptors;
 
+import java.util.List;
+import java.util.Locale;
+import java.util.Locale.LanguageRange;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -54,12 +58,15 @@ public class AsyncRequestHandler {
 			return;
 		}
 		
-		logger.debug(String.format("Received R2DA request: %s", theRequestDetails.getCompleteUrl()));		
+		logger.debug(String.format("Received R2DA request: %s", theRequestDetails.getCompleteUrl()));
+		// Retrieves the Citizen and the lang from the request
 		Citizen citizen = (Citizen)theRequest.getAttribute(SecurityConstants.CITIZEN_ATTR_NAME);
+		
 		// Creates the new R2DRequest
 		R2DRequest r2dRequest = requestProcessor.newIncomingRequest(
 				theRequestDetails.getCompleteUrl(), 
-				citizen.getPersonIdentifier());
+				citizen.getPersonIdentifier(), 
+				theRequest.getHeader("Accept-Language"));
 
 		// store the R2DRequest id in the HttpRequest 
 		theRequest.setAttribute(SecurityConstants.R2D_REQUEST_ID_PARAM_NAME, r2dRequest);

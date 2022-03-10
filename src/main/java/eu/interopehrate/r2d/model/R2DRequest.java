@@ -41,6 +41,8 @@ public class R2DRequest {
 	private String failureMessage;
 	@Column
 	private String responseIds;
+	@Column
+	private String preferredLanguages;
 	
 	public R2DRequest() {
 		this.setCreationTime(new Date());
@@ -138,12 +140,19 @@ public class R2DRequest {
 		
 	}
 
+	public String getPreferredLanguages() {
+		return preferredLanguages;
+	}
+
+	public void setPreferredLanguages(String preferredLanguages) {
+		this.preferredLanguages = preferredLanguages;
+	}
+
 	@Override
 	public String toString() {
 		return "R2DRequest [id=" + id + ", citizenId=" + citizenId + ", uri=" + uri + ", creationTime=" + creationTime
 				+ ", lastUpdateTime=" + lastUpdateTime + ", status=" + status + ", failureMessage=" + failureMessage
-				+ ", responseIds=" + responseIds + "]";
+				+ ", responseIds=" + responseIds + ", preferredLanguages=" + preferredLanguages + "]";
 	}
 
-	
 }

@@ -61,7 +61,8 @@ public class RequestProcessorImpl implements RequestProcessor {
 
 
 	@Override
-	public synchronized R2DRequest newIncomingRequest(String r2dUrl, String eidasCitizenId) throws R2DException {
+	public synchronized R2DRequest newIncomingRequest(String r2dUrl, 
+			String eidasCitizenId, String preferredLanguages) throws R2DException {
 		String r2dQuery = URLUtility.extractR2DSubQuery(r2dUrl);
 		
 		// Before accepting the request some checks must be executed
@@ -83,6 +84,7 @@ public class RequestProcessorImpl implements RequestProcessor {
 		}
 		
 		R2DRequest newR2DRequest = new R2DRequest(r2dQuery, eidasCitizenId);
+		newR2DRequest.setPreferredLanguages(preferredLanguages);
 		newR2DRequest = requestRepository.save(newR2DRequest);
 		logger.info(String.format("Created persistent request: %s for URL: %s", newR2DRequest.getId(), newR2DRequest.getUri()));		
 		
@@ -101,7 +103,6 @@ public class RequestProcessorImpl implements RequestProcessor {
 		try {
 			R2DRequest equivalentRequest = null;
 			// #1 checks if there is a cached response
-			System.out.println(CACHE_DURATION_IN_DAYS);
 			if (CACHE_DURATION_IN_DAYS > 0) {
 				logger.debug("Looks for a valid cached response...");
 				
@@ -109,11 +110,7 @@ public class RequestProcessorImpl implements RequestProcessor {
 				LocalDateTime fromLdt  = toLtd.minusDays(CACHE_DURATION_IN_DAYS);
 				Date to = Date.from(toLtd.atZone(ZoneId.systemDefault()).toInstant());
 				Date from = Date.from(fromLdt.atZone(ZoneId.systemDefault()).toInstant());
-				
-				System.out.println(from);
-				System.out.println(to);				
-				System.out.println(r2dRequest.getUri());
-				System.out.println(eidasPersonIdentifier);
+
 				List<R2DRequest> requests = requestRepository.findEquivalentValidRequest(
 						eidasPersonIdentifier, r2dRequest.getUri(), 
 						from, to);
