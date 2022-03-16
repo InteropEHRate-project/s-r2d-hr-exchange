@@ -1,9 +1,5 @@
 package eu.interopehrate.r2d.interceptors;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.Locale.LanguageRange;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 

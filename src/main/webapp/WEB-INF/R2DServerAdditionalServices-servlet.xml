@@ -48,7 +48,7 @@
 	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
 	    <property name="driverClassName" value="org.h2.Driver" />
 	    <property name="url" value="jdbc:h2:file:/Users/alessiograziani/R2DA_DB/data/r2da_database" />
-	    <!-- property name="url" value="jdbc:h2:file:/opt/tomcat/R2DA_DB/data/r2da_database" /  -->
+	    <!-- property name="url" value="jdbc:h2:file:/opt/tomcat/R2DA_DB/data/r2da_database" / -->
 	    <property name="username" value="" />
 	    <property name="password" value="" />
 	</bean>
