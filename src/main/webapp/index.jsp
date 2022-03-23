@@ -4,10 +4,11 @@
 <html>
 <head>
 	<meta charset="UTF-8">
-	<title>Hello World!</title>
+	<title>R2D Access Server</title>
 	<link rel="stylesheet" type="text/css" href="css/style.css">
 </head>
 <body>
-    <h1>Hello World!</h1>
+    <h1>R2D Access Server</h1>
+    <h2>The InteropEHRate project</h2>
 </body>
 </html>
