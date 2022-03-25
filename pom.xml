@@ -187,17 +187,15 @@
                             
                             <execution>
                             	<id>2</id>
-                                <phase>package</phase>
+                                <phase>prepare-package</phase>
                                 <goals>
                                     <goal>run</goal>
                                 </goals>
                                 <configuration>
                                     <target>
                                      	<!-- R2DServerAdditionalServices-servlet.xml file -->
-                                        <delete verbose="true" file="${project.build.directory}/${project.build.finalName}/WEB-INF/R2DServerAdditionalServices-servlet.xml"/>
                                         <copy file="src/main/webapp/WEB-INF/R2DServerAdditionalServices-servlet.test.xml"
                                               tofile="${project.build.directory}/iehr-test/WEB-INF/R2DServerAdditionalServices-servlet.xml"/>
-                                        <delete verbose="true" file="${project.build.directory}/${project.build.finalName}/WEB-INF/R2DServerAdditionalServices-servlet.test.xml"/>
                                     </target>
                                 </configuration>
                             </execution>
@@ -223,9 +221,12 @@
                         <version>3.3.2</version>
                         <executions>
                             <execution>
-                                <phase>install</phase>
+                                <phase>package</phase>
                             </execution>
                         </executions>
+                        <configuration>
+                        	
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>

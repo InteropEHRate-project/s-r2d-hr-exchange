@@ -60,7 +60,8 @@ public class AuthenticatorFilter implements Filter {
 			throws IOException, ServletException {
 		HttpServletRequest hReq = (HttpServletRequest)request;
 		HttpServletResponse hRes = (HttpServletResponse)response;
-		LOGGER.debug("Authenticating request: " + hReq.getRequestURL());
+
+		LOGGER.info("Received a new request {}, authentication in progress...", hReq.getRequestURL());
 		
 		// Get the Authorization header parameter
 		Optional<String> o = Optional.fromNullable(hReq.getHeader(SecurityConstants.AUTH_HEADER));
@@ -74,7 +75,6 @@ public class AuthenticatorFilter implements Filter {
 		
 		if (authHeaderParam.startsWith(SecurityConstants.BASIC_PREFIX)) {
 			// If basic authorization, only the EHR_SERVICE is authorized
-			LOGGER.debug("Verifying Basic Auth...");
 			String base64Credentials = authHeaderParam.substring(SecurityConstants.BASIC_PREFIX.length()).trim();
 			final byte[] decodedBytes  = Base64.getDecoder().decode(base64Credentials.getBytes());
 		    final String credentials = new String(decodedBytes);
@@ -94,7 +94,7 @@ public class AuthenticatorFilter implements Filter {
 				String oAuthToken = authHeaderParam.substring(SecurityConstants.OAUTH_PREFIX.length()).trim();
 				ResponseDetails tokenDetails = SR2DSM.decode(oAuthToken);
 				request.setAttribute(SecurityConstants.CITIZEN_ATTR_NAME, createCitizen(tokenDetails));
-			    LOGGER.info("Request contains a valid authtentication token for citizen " + tokenDetails.getUserDetails().getPersonIdentifier());
+			    LOGGER.info("Request authenticated to citizen {}", tokenDetails.getUserDetails().getPersonIdentifier());
 			} catch (Exception e) {
 				LOGGER.error("Authentication token is not valid! Request cannot be processed.", e);
 				hRes.sendError(HttpStatus.SC_UNAUTHORIZED, "Authentication token is not valid! The request cannot be processed.");	

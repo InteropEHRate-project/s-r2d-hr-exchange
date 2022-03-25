@@ -121,7 +121,7 @@ public class RequestProcessorImpl implements RequestProcessor {
 			
 			if (equivalentRequest != null) {
 				// #2.1 if there is an equivalent request
-				logger.debug("Found a valid cached response: " + equivalentRequest.getFirstResponseId());
+				logger.debug("Found a valid cached response: {}", equivalentRequest.getFirstResponseId());
 				r2dRequest.addResponseId(equivalentRequest.getFirstResponseId());
 				r2dRequest.setStatus(RequestStatus.COMPLETED);
 			} else {
