@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/mvc
+                           http://www.springframework.org/schema/mvc/spring-mvc.xsd
+                           http://www.springframework.org/schema/context
+                           http://www.springframework.org/schema/context/spring-context.xsd 
+                           http://www.springframework.org/schema/data/jpa 
+                           http://www.springframework.org/schema/data/jpa/spring-jpa-1.0.xsd
+                           http://www.springframework.org/schema/task 
+                           http://www.springframework.org/schema/task/spring-task-3.2.xsd">
+
+	<!--  activate annotation scanning for Spring MVC and Scheduling -->
+   	<mvc:annotation-driven />
+
+	<!--  scans for @Service, @Controller -->
+	<context:component-scan base-package="eu.interopehrate.r2d, eu.interopehrate.r2d.rest, 
+	eu.interopehrate.r2d.communication, eu.interopehrate.r2d.providers" />
+	
+	<!--  Instantiates the EntityManagerFactoryBean -->
+	<bean id="entityManagerFactory"
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="packagesToScan" value="eu.interopehrate.r2d.model" />
+		<property name="jpaVendorAdapter">
+			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter" />
+		</property>
+		<property name="jpaProperties">
+			<props>
+				<prop key="hibernate.show_sql">false</prop>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+				<prop key="hibernate.dialect">org.hibernate.dialect.H2Dialect</prop>
+			</props>
+		</property>
+		 <property name="persistenceProvider">
+	            <bean class="org.hibernate.jpa.HibernatePersistenceProvider"></bean>
+	     </property>
+	</bean>
+	
+	<!--  Defines the Datasource -->
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+	    <property name="driverClassName" value="org.h2.Driver" />
+	    <property name="url" value="jdbc:h2:file:/usr/local/tomcat/R2DA_DB/data/r2da_database" />
+	    <property name="username" value="" />
+	    <property name="password" value="" />
+	</bean>
+	
+	<!--  Defines the Transaction Manager -->
+    <bean class="org.springframework.orm.jpa.JpaTransactionManager"  id="transactionManager">
+        <property name="dataSource" ref="dataSource" />
+    </bean>
+
+	<!-- Defines the Scheduler and the scheduled tasks -->
+	<task:scheduler id="scheduler" pool-size="3" />
+
+    <bean class="eu.interopehrate.r2d.business.DatabaseCleaner"  id="databaseCleaner" scope="singleton" />
+
+	<!--  Every minute = 0 * * ? * *, Every Hour = 0 0 * ? * * -->
+	<!-- task:scheduled-tasks scheduler="scheduler">
+	    <task:scheduled ref="databaseCleaner" method="deleteOldResponse" initial-delay="60000" cron="0 * * ? * *" />
+	</task:scheduled-tasks -->
+
+	<!-- Activates scanning of @Repository classes -->
+    <jpa:repositories base-package="eu.interopehrate.r2d.dao" />
+                
+</beans>
