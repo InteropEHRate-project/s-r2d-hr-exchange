@@ -36,7 +36,12 @@
     <!-- Editable user database that can also be used by
          UserDatabaseRealm to authenticate users
     -->
-    <Resource auth="Container" description="User database that can be updated and saved" factory="org.apache.catalina.users.MemoryUserDatabaseFactory" name="UserDatabase" pathname="conf/tomcat-users.xml" type="org.apache.catalina.UserDatabase"/>
+    <Resource auth="Container" 
+              description="User database that can be updated and saved" 
+              factory="org.apache.catalina.users.MemoryUserDatabaseFactory" 
+              name="UserDatabase" 
+              pathname="conf/tomcat-users.xml" 
+              type="org.apache.catalina.UserDatabase"/>
   </GlobalNamingResources>
 
   <!-- A "Service" is a collection of one or more "Connectors" that share
@@ -60,14 +65,18 @@
          APR (HTTP/AJP) Connector: /docs/apr.html
          Define a non-SSL/TLS HTTP/1.1 Connector on port 8080
     -->
-    <Connector connectionTimeout="20000" port="8080" protocol="HTTP/1.1" redirectPort="8443" maxHttpHeaderSize="65536"/>
+    <Connector connectionTimeout="20000" 
+    			port="8080" 
+    			protocol="HTTP/1.1" 
+    			redirectPort="8443" 
+    			maxHttpHeaderSize="65536"/>
+    			
     <!-- A "Connector" using the shared thread pool-->
-    <!--
-    <Connector executor="tomcatThreadPool"
-               port="8080" protocol="HTTP/1.1"
+    <!--  Connector executor="tomcatThreadPool"
+               port="8080" 
+               protocol="HTTP/1.1"
                connectionTimeout="20000"
-               redirectPort="8443" />
-    -->
+               redirectPort="8443" / -->
     <!-- Define an SSL/TLS HTTP/1.1 Connector on port 8443
          This connector uses the NIO implementation. The default
          SSLImplementation will depend on the presence of the APR/native
@@ -84,6 +93,24 @@
         </SSLHostConfig>
     </Connector>
     -->
+    
+    <!-- Defines a JSSE connector for HTTPS support it can use OpenSSL 
+    or a Java implementation depending on the env config --> 
+    <Connector protocol="org.apache.coyote.http11.Http11NioProtocol"
+           sslImplementationName="org.apache.tomcat.util.net.jsse.JSSEImplementation"
+           SSLEnabled="true"
+           port="8443"
+           maxHttpHeaderSize="65536">
+        <SSLHostConfig>
+            <Certificate 
+            certificateKeystoreFile="conf/keystore.p12" 
+            certificateKeyAlias="healthorganization"
+            certificateKeystorePassword="interop" 
+            sslProtocol="TLS"
+            type="RSA" />
+        </SSLHostConfig>
+     </Connector>
+    
     <!-- Define an SSL/TLS HTTP/1.1 Connector on port 8443 with HTTP/2
          This connector uses the APR/native implementation which always uses
          OpenSSL for TLS.
@@ -139,7 +166,10 @@
         <Realm className="org.apache.catalina.realm.UserDatabaseRealm" resourceName="UserDatabase"/>
       </Realm>
 
-      <Host appBase="webapps" autoDeploy="true" name="localhost" unpackWARs="true">
+      <Host appBase="webapps" 
+            autoDeploy="true" 
+            name="localhost" 
+            unpackWARs="true">
 
         <!-- SingleSignOn valve, share authentication between web applications
              Documentation at: /docs/config/valve.html -->
@@ -150,7 +180,11 @@
         <!-- Access log processes all example.
              Documentation at: /docs/config/valve.html
              Note: The pattern used is equivalent to using pattern="common" -->
-        <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs" pattern="%h %l %u %t &quot;%r&quot; %s %b" prefix="localhost_access_log" suffix=".txt"/>
+        <Valve className="org.apache.catalina.valves.AccessLogValve" 
+               directory="logs" 
+               pattern="%h %l %u %t &quot;%r&quot; %s %b" 
+               prefix="localhost_access_log" 
+               suffix=".txt"/>
 
       </Host>
     </Engine>
