@@ -20,6 +20,21 @@
 		<fhir.version>4.1.0</fhir.version>
 		<spring.version>5.3.10</spring.version>
 	</properties>
+	
+	<repositories>
+        <repository>
+            <id>oss-snapshots</id>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+        	<name>IEHR Repo</name>
+            <id>IEHR-Nexus</id>
+            <url>http://213.249.46.206:8081/repository/maven-releases/</url>
+        </repository>     
+    </repositories>
 
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/javax.servlet/servlet-api -->
@@ -130,7 +145,12 @@
 		        </exclusion>
 	      </exclusions> 
 		</dependency>
-	
+		
+		<dependency>
+			<groupId>eu.interopehrate</groupId>
+			<artifactId>securityca</artifactId>
+			<version>0.0.2</version>
+		</dependency>
 		<!-- DB dependencies -->			
 		<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
 		<dependency>

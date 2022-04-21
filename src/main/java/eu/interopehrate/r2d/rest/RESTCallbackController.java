@@ -25,7 +25,6 @@ public class RESTCallbackController {
 	@Autowired(required = true)
 	private RequestProcessor requestProcessor;
 
-	
 	/**
 	 * 
 	 * @param theRequestId
@@ -70,8 +69,9 @@ public class RESTCallbackController {
 			HttpServletResponse httpResponse) throws IOException {
 				
 		logger.info(String.format("Received a notification that request %s completed succesfully.", theRequestId));
-		if (theBody != null && theBody.trim().length() > 0 )
+		if (theBody != null && theBody.trim().length() > 0 ) {
 			logger.debug(String.format("The request produced a result of size %d: ", theBody.length()));
+		}
 		
 		try {
 			requestProcessor.requestCompletedSuccesfully(theRequestId, theBody);

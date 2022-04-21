@@ -31,17 +31,18 @@ import eu.interopehrate.r2d.providers.MedicationRequestResourceProvider;
 import eu.interopehrate.r2d.providers.ObservationResourceProvider;
 import eu.interopehrate.r2d.providers.PatientResourceProvider;
 import eu.interopehrate.r2d.providers.ProcedureResourceProvider;
+import eu.interopehrate.r2d.security.ResourceSigner;
 
 public class R2DAccessServer extends RestfulServer {
 
-	/**
-	 * 
-	 */
+	public static FhirContext FHIR_CONTEXT;
+	
 	private static final long serialVersionUID = 7367855477396438198L;
 	private static final Logger logger = LoggerFactory.getLogger(R2DAccessServer.class);
 
 	public R2DAccessServer() {
 		super(FhirContext.forR4());
+		FHIR_CONTEXT = getFhirContext();
 	}
 	
 	@Override
@@ -103,6 +104,18 @@ public class R2DAccessServer extends RestfulServer {
 		 * Tells the server to return pretty-printed responses by default
 		 */
 		setDefaultPrettyPrint(true);
+		
+		
+		/*
+		 * Executes initialization ResourceSigner
+		 */
+		try {
+			logger.debug("Initializing ResourceSigner...");
+			ResourceSigner.INSTANCE.initialize();
+		} catch (Exception e) {
+			logger.error("Error while initializing ResourceSigner", e);
+			throw new ServletException("Error while initializing ResourceSigner", e);
+		}
 	}
 
 
