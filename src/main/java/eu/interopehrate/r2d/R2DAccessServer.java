@@ -42,13 +42,15 @@ public class R2DAccessServer extends RestfulServer {
 
 	public R2DAccessServer() {
 		super(FhirContext.forR4());
-		FHIR_CONTEXT = getFhirContext();
 	}
 	
 	@Override
 	protected void initialize() throws ServletException {
-		logger.debug("Initializing R2DAccessServer...");
-		
+		if (logger.isDebugEnabled())
+			logger.debug("Initializing R2DAccessServer...");
+
+		FHIR_CONTEXT = getFhirContext();
+
 		/*
 		 * Two resource providers are defined. Each one handles a specific
 		 * type of resource.
@@ -110,7 +112,8 @@ public class R2DAccessServer extends RestfulServer {
 		 * Executes initialization ResourceSigner
 		 */
 		try {
-			logger.debug("Initializing ResourceSigner...");
+			if (logger.isDebugEnabled())
+				logger.debug("Initializing ResourceSigner...");
 			ResourceSigner.INSTANCE.initialize();
 		} catch (Exception e) {
 			logger.error("Error while initializing ResourceSigner", e);

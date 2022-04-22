@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import eu.interopehrate.r2d.Configuration;
 import eu.interopehrate.r2d.R2DAccessServer;
@@ -23,6 +22,7 @@ import eu.interopehrate.r2d.exceptions.TooManyRequestException;
 import eu.interopehrate.r2d.model.R2DRequest;
 import eu.interopehrate.r2d.model.R2DResponse;
 import eu.interopehrate.r2d.model.RequestStatus;
+import eu.interopehrate.r2d.provenance.BundleProvenanceBuilder;
 import eu.interopehrate.r2d.services.EHRService;
 import eu.interopehrate.r2d.utils.URLUtility;
 
@@ -33,7 +33,6 @@ public class RequestProcessorImpl implements RequestProcessor {
 	private static int MAX_CONCURRENT_REQUEST;
 	private static final String CACHE_DURATION_PROPERTY =  "r2da.cacheDurationInDays";
 	private static int CACHE_DURATION_IN_DAYS;
-	private IParser parser;
 
 	@Autowired(required = true)
 	private EHRService ehrService;
@@ -44,16 +43,16 @@ public class RequestProcessorImpl implements RequestProcessor {
 	@Autowired(required = true)
 	private RequestRepository requestRepository;
 	
+	private BundleProvenanceBuilder provenanceBuilder;
 	
 	public RequestProcessorImpl() {
-		super();
-		
 		// Retrieves MAX_CONCURRENT_REQUEST from properties file
 		MAX_CONCURRENT_REQUEST = Integer.parseInt(Configuration.getProperty(MAX_CONCURRENT_REQUEST_PROPERTY));
 		// Retrieves CACHE_DURATION_IN_DAYS from properties file
 		CACHE_DURATION_IN_DAYS = Integer.parseInt(Configuration.getProperty(CACHE_DURATION_PROPERTY));
-		// Creates the instance of parser used tomanipulate FHIR resources
-    	parser = R2DAccessServer.FHIR_CONTEXT.newJsonParser();
+    	// Creates the instance of BundleProvenanceBuilder to add Provenance 
+    	// to bundles produced by EHR-MW
+    	provenanceBuilder = new BundleProvenanceBuilder();
 	}
 
 
@@ -101,7 +100,8 @@ public class RequestProcessorImpl implements RequestProcessor {
 			R2DRequest equivalentRequest = null;
 			// #1 checks if there is a cached response
 			if (CACHE_DURATION_IN_DAYS > 0) {
-				logger.debug("Looks for a valid cached response...");
+				if (logger.isDebugEnabled())
+					logger.debug("Looks for a valid cached response...");
 				
 				LocalDateTime toLtd = LocalDateTime.now();
 				LocalDateTime fromLdt  = toLtd.minusDays(CACHE_DURATION_IN_DAYS);
@@ -118,12 +118,14 @@ public class RequestProcessorImpl implements RequestProcessor {
 			
 			if (equivalentRequest != null) {
 				// #2.1 if there is an equivalent request
-				logger.debug("Found a valid cached response: {}", equivalentRequest.getFirstResponseId());
+				if (logger.isDebugEnabled())
+					logger.debug("Found a valid cached response: {}", equivalentRequest.getFirstResponseId());
 				r2dRequest.addResponseId(equivalentRequest.getFirstResponseId());
 				r2dRequest.setStatus(RequestStatus.COMPLETED);
 			} else {
 				// #2.2 if there is no cached response sends the request to the EHR
-				logger.debug("No cached response, sends request to EHR...");
+				if (logger.isDebugEnabled())
+					logger.debug("No cached response, sends request to EHR...");
 				ehrService.sendRequest(r2dRequest, authToken);
 				r2dRequest.setStatus(RequestStatus.RUNNING);
 			}
@@ -158,28 +160,29 @@ public class RequestProcessorImpl implements RequestProcessor {
 							theR2DRequest.getStatus(), requestId));
 		}
 			
-		// #2.1 Parse results to verifies the bundle
 		Bundle theBundle = null;
 		try {
+			// #2.1 Parse results to verifies the bundle
+			IParser parser = R2DAccessServer.FHIR_CONTEXT.newJsonParser();
 			theBundle = parser.parseResource(Bundle.class, jsonBundle);
-			logger.debug(String.format("Response contains a valid Bundle with %d entries: ", theBundle.getEntry().size()));
-			// TODO: adds the signature of the resources
+			if (logger.isDebugEnabled())
+				logger.debug(String.format("Response contains a valid Bundle with %d entries: ", theBundle.getEntry().size()));
 			
+			// #2.2 Adds the Provenance information to the resources
+			provenanceBuilder.addProvenanceToBundleItems(theBundle);
 			
-			
-			
-			// #2.2 Store response to the DB
+			// #2.3 Store response to the DB
 			R2DResponse response = new R2DResponse();
-			response.setResponse(jsonBundle);
+			response.setResponse(parser.encodeResourceToString(theBundle));
 			response.setCitizenId(theR2DRequest.getCitizenId());
 			responseRepository.save(response);
 
-			// #2.2 Update status of the request to the DB
+			// #2.4 Update status of the request to the DB
 			theR2DRequest.addResponseId(response.getId());
 			theR2DRequest.setStatus(RequestStatus.COMPLETED);
 			requestRepository.save(theR2DRequest);			
-			logger.debug(String.format("Request %s succesfully completed the execution!", requestId));
-			
+			if (logger.isDebugEnabled())
+				logger.debug(String.format("Request %s succesfully completed the execution!", requestId));
 		} catch (Exception e) {
 			logger.error(String.format("Error while parsing the received bundle: %s ", e.getMessage()));
 			logger.error(e.getMessage(), e);
@@ -200,21 +203,23 @@ public class RequestProcessorImpl implements RequestProcessor {
 			throw new R2DException(
 					R2DException.REQUEST_NOT_FOUND, String.format("Request with id % not found.", requestId));
 		
+
 		// checks request status		
 		R2DRequest theR2DRequest = optional.get();
-		if (theR2DRequest.getStatus() == RequestStatus.RUNNING || theR2DRequest.getStatus() == RequestStatus.PARTIALLY_COMPLETED) {
-			// update request status
-			theR2DRequest.setStatus(RequestStatus.FAILED);
-			theR2DRequest.setFailureMessage(failureMsg);
-			requestRepository.save(theR2DRequest);			
+		if (theR2DRequest.getStatus() != RequestStatus.RUNNING &&
+				theR2DRequest.getStatus() != RequestStatus.PARTIALLY_COMPLETED) {
+				throw new R2DException(
+						R2DException.INVALID_STATE, 
+						String.format("Current status (%s) of request with id % does not allow to elaborate it.", 
+								theR2DRequest.getStatus(), requestId));
+		}		
+		
+		// update request status
+		theR2DRequest.setStatus(RequestStatus.FAILED);
+		theR2DRequest.setFailureMessage(failureMsg);
+		requestRepository.save(theR2DRequest);			
+		if (logger.isDebugEnabled())
 			logger.debug(String.format("Request %s unsuccesfully completed the execution!", requestId));
-		}  else {
-			throw new R2DException(
-					R2DException.INVALID_STATE, 
-					String.format("Current status (%s) of request with id %s does not allow to elaborate it.", 
-							theR2DRequest.getStatus(), requestId));
-		}
-
 	}
 	
 	
@@ -239,8 +244,10 @@ public class RequestProcessorImpl implements RequestProcessor {
 		// #2.1 Parse results to verifies the bundle
 		Bundle theBundle = null;
 		try {
+			IParser parser = R2DAccessServer.FHIR_CONTEXT.newJsonParser();
 			theBundle = parser.parseResource(Bundle.class, jsonBundle);
-			logger.debug(String.format("Response contains a valid Bundle with %d entries: ", theBundle.getEntry().size()));
+			if (logger.isDebugEnabled())
+				logger.debug(String.format("Response contains a valid Bundle with %d entries: ", theBundle.getEntry().size()));
 			// TODO: adds the signature of the resources
 			
 			// #2.2 Store response to the DB
@@ -253,7 +260,8 @@ public class RequestProcessorImpl implements RequestProcessor {
 			theR2DRequest.setStatus(RequestStatus.PARTIALLY_COMPLETED);
 			theR2DRequest.addResponseId(response.getId());
 			requestRepository.save(theR2DRequest);			
-			logger.debug(String.format("Partial result of request %s succesfully stored!", requestId));
+			if (logger.isDebugEnabled())
+				logger.debug(String.format("Partial result of request %s succesfully stored!", requestId));
 
 		} catch (Exception e) {
 			logger.error(String.format("Error while parsing the received bundle: %s ", e.getMessage()));

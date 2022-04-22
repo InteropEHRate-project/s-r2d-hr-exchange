@@ -55,7 +55,8 @@ public class RESTEHRService implements EHRService {
 
 		// #3 Sends request
 		try {
-			logger.debug(String.format("Inovked EHR-MW service for request with id %s", r2dRequest.getId()));
+			if (logger.isDebugEnabled())
+				logger.debug(String.format("Inovked EHR-MW service for request with id %s", r2dRequest.getId()));
 			// Creates the HttpClient
 			CloseableHttpClient httpclient = HttpClients.createDefault();
 			CloseableHttpResponse response = httpclient.execute(httpGet);

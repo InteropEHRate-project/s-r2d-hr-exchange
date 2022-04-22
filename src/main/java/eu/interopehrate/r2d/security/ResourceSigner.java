@@ -7,6 +7,7 @@ import org.hl7.fhir.r4.model.Resource;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import eu.interopehrate.r2d.Configuration;
+import eu.interopehrate.r2d.R2DAccessServer;
 import iehr.security.CryptoManagementFactory;
 import iehr.security.api.CryptoManagement;
 
@@ -23,8 +24,8 @@ public class ResourceSigner {
 	public void initialize() throws Exception {
 		// Creates the instance of CryptoManagement
 		cryptoManagement = CryptoManagementFactory.create(
-				Configuration.getProperty("signature.certificate"),
-				Configuration.getProperty("signature.certificate.CA"));
+				Configuration.getProperty("signature.certificate.CA"),
+				Configuration.getProperty("signature.keystore"));
 		
 		// retrieves the health org private key
 		String certAlias = Configuration.getProperty("signature.certificate.alias");
@@ -32,7 +33,7 @@ public class ResourceSigner {
 		// retrieves the health org certificate: MUST BE DONE ONCE
 		certificateData = cryptoManagement.getUserCertificate(certAlias);
 		// Instantiate the parser
-		parser = FhirContext.forR4().newJsonParser();
+		parser = R2DAccessServer.FHIR_CONTEXT.newJsonParser();
 	}
 	
 	

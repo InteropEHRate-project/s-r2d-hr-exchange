@@ -50,11 +50,13 @@ public class AsyncRequestHandler {
 	public void startAsyncRequestProcessing (RequestDetails theRequestDetails, HttpServletRequest theRequest) throws R2DException {
 		// Creates the request unique id
 		if (hasToBeSkipped(theRequest.getRequestURL().toString())) {
-			logger.debug(String.format("Received request %s that will be handled synchronously.", theRequestDetails.getCompleteUrl()));
+			if (logger.isDebugEnabled())
+				logger.debug(String.format("Received request %s that will be handled synchronously.", theRequestDetails.getCompleteUrl()));
 			return;
 		}
 		
-		logger.debug(String.format("Received R2DA request: %s", theRequestDetails.getCompleteUrl()));
+		if (logger.isDebugEnabled())
+			logger.debug(String.format("Received R2DA request: %s", theRequestDetails.getCompleteUrl()));
 		// Retrieves the Citizen and the lang from the request
 		Citizen citizen = (Citizen)theRequest.getAttribute(SecurityConstants.CITIZEN_ATTR_NAME);
 		

@@ -41,7 +41,8 @@ public class RESTCallbackController {
 
 		logger.info(String.format("Received a notification that request %s produce a partial result.", theRequestId));
 		if (theBody != null && theBody.trim().length() > 0 )
-			logger.debug(String.format("The request produced a result of size %d: ", theBody.length()));
+			if (logger.isDebugEnabled())
+				logger.debug(String.format("The request produced a result of size %d: ", theBody.length()));
 		
 		try {
 			requestProcessor.requestProducedPartialResult(theRequestId, theBody);
@@ -69,9 +70,6 @@ public class RESTCallbackController {
 			HttpServletResponse httpResponse) throws IOException {
 				
 		logger.info(String.format("Received a notification that request %s completed succesfully.", theRequestId));
-		if (theBody != null && theBody.trim().length() > 0 ) {
-			logger.debug(String.format("The request produced a result of size %d: ", theBody.length()));
-		}
 		
 		try {
 			requestProcessor.requestCompletedSuccesfully(theRequestId, theBody);
