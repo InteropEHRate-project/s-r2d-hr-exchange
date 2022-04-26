@@ -1,1 +1,1 @@
-# s-r2d-hre
+# InteropEHRate Server Remote-to-Device (R2D) HR Exchange
