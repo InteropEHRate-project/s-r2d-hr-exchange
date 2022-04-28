@@ -162,6 +162,7 @@ public class RequestProcessorImpl implements RequestProcessor {
 			
 		Bundle theBundle = null;
 		try {
+			logger.info(String.format("Saving response and generating provenance info for request %s...", requestId));
 			// #2.1 Parse results to verifies the bundle
 			IParser parser = R2DAccessServer.FHIR_CONTEXT.newJsonParser();
 			theBundle = parser.parseResource(Bundle.class, jsonBundle);
@@ -181,8 +182,7 @@ public class RequestProcessorImpl implements RequestProcessor {
 			theR2DRequest.addResponseId(response.getId());
 			theR2DRequest.setStatus(RequestStatus.COMPLETED);
 			requestRepository.save(theR2DRequest);			
-			if (logger.isDebugEnabled())
-				logger.debug(String.format("Request %s succesfully completed the execution!", requestId));
+			logger.info(String.format("Response of request %s succesfully saved to database. Execution completed!", requestId));
 		} catch (Exception e) {
 			logger.error(String.format("Error while parsing the received bundle: %s ", e.getMessage()));
 			logger.error(e.getMessage(), e);
@@ -218,8 +218,7 @@ public class RequestProcessorImpl implements RequestProcessor {
 		theR2DRequest.setStatus(RequestStatus.FAILED);
 		theR2DRequest.setFailureMessage(failureMsg);
 		requestRepository.save(theR2DRequest);			
-		if (logger.isDebugEnabled())
-			logger.debug(String.format("Request %s unsuccesfully completed the execution!", requestId));
+		logger.info(String.format("Request %s unsuccesfully completed the execution!", requestId));
 	}
 	
 	
