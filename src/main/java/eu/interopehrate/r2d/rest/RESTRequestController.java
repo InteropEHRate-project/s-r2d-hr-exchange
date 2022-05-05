@@ -1,11 +1,8 @@
 package eu.interopehrate.r2d.rest;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
@@ -13,6 +10,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hl7.fhir.r4.model.OperationOutcome;
+import org.hl7.fhir.r4.model.OperationOutcome.OperationOutcomeIssueComponent;
+import org.hl7.fhir.r4.model.codesystems.IssueSeverity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -52,35 +52,6 @@ public class RESTRequestController {
 		return requestRepository.findByCitizenId(citizen.getPersonIdentifier());
 	}
 	
-	@GetMapping(path = "/test", produces = "application/json")
-	public List<R2DRequest> test(HttpServletRequest theRequest, 
-			HttpServletResponse theResponse) throws IOException {
-		
-		Citizen citizen = (Citizen)theRequest.getAttribute(SecurityConstants.CITIZEN_ATTR_NAME);
-		
-		// #1 Checks if citizen has already submitted 2 requests in the last 24 hours
-		
-		/*
-		reqs = requestRepository.findSameRequestInTheDay(
-				"/Encounter?status=finished",
-				eidasPersonIdentifier);
-		*/
-		
-		// Checks if in the last 
-		LocalDateTime toLtd = LocalDateTime.now();
-		LocalDateTime fromLdt  = toLtd.minusDays(5);
-		Date to = Date.from(toLtd.atZone(ZoneId.systemDefault()).toInstant());
-		Date from = Date.from(fromLdt.atZone(ZoneId.systemDefault()).toInstant());
-		
-		System.out.println(from);
-		System.out.println(to);
-		System.out.println(citizen.getPersonIdentifier());
-		List<R2DRequest> requests = requestRepository.findEquivalentValidRequest(
-				citizen.getPersonIdentifier(), "/Encounter?status=finished",
-				from, to);
-
-		return requests;
-	}
 	
 	@GetMapping(path = "/{theRequestId}", produces = "application/json")
 	public R2DRequest getRequestById(@PathVariable String theRequestId, HttpServletRequest theRequest, 
@@ -104,30 +75,41 @@ public class RESTRequestController {
 		Citizen citizen = (Citizen)theRequest.getAttribute(SecurityConstants.CITIZEN_ATTR_NAME);
 		
 		Optional<R2DRequest> opt = requestRepository.findByRequestIdAndCitizenId(theRequestId, citizen.getPersonIdentifier());
-		if (opt.isPresent()) {
-			R2DRequest theR2DRequest = opt.get();
-			if (theR2DRequest.getStatus() == RequestStatus.RUNNING) {
-				theResponse.sendError(HttpServletResponse.SC_ACCEPTED, 
-						"Your request is still under processing, please use again this URL to monitor it.");
-				return null;
-			} else if (theR2DRequest.getStatus() == RequestStatus.COMPLETED) {
-				Optional<R2DResponse> optResp = responseRepository.findById(theR2DRequest.getFirstResponseId());
-				
-				StringBuilder responseURL = new StringBuilder(Configuration.getR2DServicesContextPath());
-				responseURL.append("/requests/").append(theR2DRequest.getId())
-				.append("/response/").append(optResp.get().getId());
-				
-				RequestOutcome outcome = new RequestOutcome(theR2DRequest.getUri());
-				outcome.addOutput(new RequestOutput("Bundle", responseURL.toString()));	
-				
-				return outcome;
-			} else
-				return null;
-		} else {
+		if (!opt.isPresent()) {
 			theResponse.sendError(HttpServletResponse.SC_NOT_FOUND, String.format(
 					"Request with id %s not found or not belonging to requesting citizen.", theRequestId));
 			return null;
 		}
+		
+
+		R2DRequest theR2DRequest = opt.get();
+		if (theR2DRequest.getStatus() == RequestStatus.RUNNING) {
+			theResponse.sendError(HttpServletResponse.SC_ACCEPTED, 
+					"Your request is still under processing, please use again this URL to monitor it.");
+			return null;
+		} 
+		
+		if (theR2DRequest.getStatus() == RequestStatus.FAILED) {
+			RequestOutcome outcome = new RequestOutcome(theR2DRequest.getUri());
+			outcome.setError(theR2DRequest.getFailureMessage());
+			
+			return outcome;
+		}
+		
+		if (theR2DRequest.getStatus() == RequestStatus.COMPLETED) {
+			Optional<R2DResponse> optResp = responseRepository.findById(theR2DRequest.getFirstResponseId());
+			
+			StringBuilder responseURL = new StringBuilder(Configuration.getR2DServicesContextPath());
+			responseURL.append("/requests/").append(theR2DRequest.getId())
+			.append("/response/").append(optResp.get().getId());
+			
+			RequestOutcome outcome = new RequestOutcome(theR2DRequest.getUri());
+			outcome.addOutput(new RequestOutput("Bundle", responseURL.toString()));	
+			
+			return outcome;
+		} 
+
+		return null;
 	}
 	
 	

@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.hl7.fhir.r4.model.OperationOutcome;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class RequestOutcome {
@@ -13,9 +11,9 @@ public class RequestOutcome {
 	private Date transactionTime;
 	private String request;
 	private boolean requiresAccessToken = true;
+	private String error;
 	
 	private List<RequestOutput> output = new ArrayList<RequestOutput>();
-	private List<OperationOutcome> error = new ArrayList<OperationOutcome>();
 	
 	public RequestOutcome(String requestURI) {
 		transactionTime = new Date();
@@ -26,10 +24,6 @@ public class RequestOutcome {
 		output.add(out);
 	}
 	
-	
-	public void addError(OperationOutcome out) {
-		error.add(out);
-	}
 
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
 	public Date getTransactionTime() {
@@ -55,6 +49,14 @@ public class RequestOutcome {
 	public void setRequiresAccessToken(boolean requiresAccessToken) {
 		this.requiresAccessToken = requiresAccessToken;
 	}
+	
+	public String getError() {
+		return error;
+	}
+
+	public void setError(String error) {
+		this.error = error;
+	}
 
 	public List<RequestOutput> getOutput() {
 		return output;
@@ -62,14 +64,6 @@ public class RequestOutcome {
 
 	public void setOutput(List<RequestOutput> output) {
 		this.output = output;
-	}
-
-	public List<OperationOutcome> getError() {
-		return error;
-	}
-
-	public void setError(List<OperationOutcome> error) {
-		this.error = error;
 	}
 
 	@Override
