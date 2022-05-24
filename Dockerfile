@@ -1,6 +1,6 @@
 #
 #
-# Dockerfile for building the Docker image of thr R2D Access Server
+# Dockerfile for building the Docker image of the R2D Access Server
 #
 # The interopEHRate project: www.interopehrate.eu 
 #
@@ -27,7 +27,8 @@ COPY ./tomcat/keystore.p12 /usr/local/tomcat/conf/keystore.p12
 #
 # Expose only the https port
 #
-EXPOSE 8443/tcp
+# EXPOSE 8443/tcp
+EXPOSE 8080/tcp
 
 #
 # Copy the R2DA WAR file to be deployed as web app

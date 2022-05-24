@@ -61,13 +61,13 @@ public class AuthenticatorFilter implements Filter {
 		HttpServletRequest hReq = (HttpServletRequest)request;
 		HttpServletResponse hRes = (HttpServletResponse)response;
 
-		LOGGER.info("Received a new request {}, authentication in progress...", hReq.getRequestURL());
+		// LOGGER.info("Received a new request {}, authentication in progress...", hReq.getRequestURL());
 		
 		// Get the Authorization header parameter
 		Optional<String> o = Optional.fromNullable(hReq.getHeader(SecurityConstants.AUTH_HEADER));
 		if (!o.isPresent()) {
-			LOGGER.error("The request lacks the Authorization header parameter, thus cannot be processed.");
-			hRes.sendError(HttpStatus.SC_UNAUTHORIZED, "The request lacks the Authorization header parameter, thus cannot be processed.");
+			LOGGER.error("Received a request lacking the Authorization header parameter! Request is blocked!");
+			hRes.sendError(HttpStatus.SC_UNAUTHORIZED, "The request lacks authentication information, it cannot be processed.");
 			return;			
 		}
 	
@@ -79,29 +79,27 @@ public class AuthenticatorFilter implements Filter {
 			final byte[] decodedBytes  = Base64.getDecoder().decode(base64Credentials.getBytes());
 		    final String credentials = new String(decodedBytes);
 		    if (!credentials.equals(ehrServiceCredentials)) {
-				LOGGER.error("The provided credentials are not valid! The request cannot be processed.");
+				LOGGER.error("Received a request with invalid credentials! Request is blocked!");
 				hRes.sendError(HttpStatus.SC_UNAUTHORIZED, "The provided credentials are not valid! The request cannot be processed.");			
 				return;
 		    }
 		    
 		    // check paths
-			LOGGER.info("Request authenticated to EHR Service.");
+			// LOGGER.info("Request authenticated to EHR Service.");
 		
 		} else if (authHeaderParam.startsWith(SecurityConstants.OAUTH_PREFIX)) {
 			// If oAuth authorization, only citizen is allowed
 			try {
-				LOGGER.debug("Verifying EIDAS token...");
 				String oAuthToken = authHeaderParam.substring(SecurityConstants.OAUTH_PREFIX.length()).trim();
 				ResponseDetails tokenDetails = SR2DSM.decode(oAuthToken);
 				request.setAttribute(SecurityConstants.CITIZEN_ATTR_NAME, createCitizen(tokenDetails));
-			    LOGGER.info("Request authenticated to citizen {}", tokenDetails.getUserDetails().getPersonIdentifier());
+			    LOGGER.info("Received a request from citizen {}", tokenDetails.getUserDetails().getPersonIdentifier());
 			} catch (Exception e) {
 				LOGGER.error("Authentication token is not valid! Request cannot be processed.", e);
 				hRes.sendError(HttpStatus.SC_UNAUTHORIZED, "Authentication token is not valid! The request cannot be processed.");	
 				return;
 			}
 			// check paths
-			
 		} else {
 			LOGGER.error("Authorization header is not used properly! The request cannot be processed.");
 			hRes.sendError(HttpStatus.SC_UNAUTHORIZED, "Authorization header is not used properly! The request cannot be processed.");

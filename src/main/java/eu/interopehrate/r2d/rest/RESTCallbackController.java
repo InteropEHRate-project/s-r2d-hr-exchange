@@ -5,8 +5,8 @@ import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,7 +20,7 @@ import eu.interopehrate.r2d.exceptions.R2DException;
 @RestController
 @RequestMapping("/callbacks")
 public class RESTCallbackController {
-	private static final Log logger = LogFactory.getLog(RESTCallbackController.class);
+	private static final Logger logger = LoggerFactory.getLogger(RESTCallbackController.class);
 	
 	@Autowired(required = true)
 	private RequestProcessor requestProcessor;
@@ -32,7 +32,6 @@ public class RESTCallbackController {
 	 * @param httpRequest
 	 * @param httpResponse
 	 * @throws IOException
-	 */
 	@PostMapping(value = "/{theRequestId}/partial-result-produced", consumes = "application/json")
 	public void onPartialResultReady(@PathVariable String theRequestId, 
 			@RequestBody String theBody,
@@ -54,6 +53,7 @@ public class RESTCallbackController {
 		}		
 		
 	}
+	 */
 
 	
 	/**
@@ -72,7 +72,7 @@ public class RESTCallbackController {
 		logger.info(String.format("Received a notification that request %s completed succesfully.", theRequestId));
 		
 		try {
-			requestProcessor.requestCompletedSuccesfully(theRequestId, theBody);
+			requestProcessor.requestCompletedSuccesfully(theRequestId);
 		} catch (R2DException r2de) {
 			if (r2de.getCode() == R2DException.REQUEST_NOT_FOUND) {
 				httpResponse.sendError(HttpServletResponse.SC_NOT_FOUND, r2de.getMessage());					

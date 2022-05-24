@@ -18,19 +18,30 @@ public interface RequestRepository extends CrudRepository<R2DRequest, String>{
 	@Query("SELECT r FROM R2DRequest r WHERE r.citizenId=:citizenId ORDER BY r.creationTime DESC")
 	public List<R2DRequest> findByCitizenId(@Param("citizenId") String citizenId);
 
+	
 	// Looks for a specific request of the citizen
 	@Query("SELECT r FROM R2DRequest r WHERE r.id=:requestId AND r.citizenId=:citizenId")
 	public Optional<R2DRequest> findByRequestIdAndCitizenId(@Param("requestId") String requestId, 
 			@Param("citizenId") String citizenId);
+	
 
+	// Counts all the RUNNING requests of a citizen
+	@Query("SELECT r FROM R2DRequest r "
+			+ "WHERE r.citizenId = :citizenId "
+			+ "AND r.status = 'RUNNING' "
+			+ "ORDER BY r.creationTime DESC ")
+	public List<R2DRequest> findRunningRequestOfTheCitizen(@Param("citizenId") String citizenId);
+
+	
 	// Counts all the RUNNING requests of a citizen
 	@Query("SELECT COUNT(r) FROM R2DRequest r "
 			+ "WHERE r.citizenId = :citizenId "
 			+ "AND r.status = 'RUNNING' "
-			+ "AND r.creationTime between :from AND :to ")
-	public long findRunningRequestOfTheCitizen(@Param("citizenId") String citizenId,
+			+ "AND r.lastUpdateTime between :from AND :to ")
+	public long countRunningRequestOfTheCitizenInPeriod(@Param("citizenId") String citizenId,
 			@Param("from") Date from, @Param("to") Date to);
 
+	
 	// Looks for a cached response for a request
 	@Query("SELECT r FROM R2DRequest r "
 			+ " WHERE r.citizenId = :citizenId "

@@ -23,12 +23,11 @@ public final class Configuration {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static String getProperty(String name) {
-		return config.getProperty(name);	
+		return config.getProperty(name);
 	}
-	
-	
+
 	public static String getR2DContextPath() {
 		return config.getProperty(R2DA_ENDPOINT) + "/" + config.getProperty(R2DA_R2D_CONTEXT);
 	}
@@ -43,6 +42,10 @@ public final class Configuration {
 
 	public static String getEHRMWServicesContextPath() {
 		return config.getProperty(EHR_MW_ENDPOINT) + "/" + config.getProperty(EHR_MW_SERVICES_CONTEXT);
+	}
+	
+	public static String getDBPath() {
+		return config.getProperty("r2da.storage.path");
 	}
 	
 }

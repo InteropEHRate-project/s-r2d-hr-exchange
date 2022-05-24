@@ -37,8 +37,8 @@ public interface RequestProcessor {
 	 * 
 	 * @return
 	 * @throws R2DException
-	 */
 	public void requestProducedPartialResult(String requestId, String jsonBundle) throws R2DException;
+	 */
 
 	
 	/**
@@ -49,17 +49,17 @@ public interface RequestProcessor {
 	 * @return
 	 * @throws R2DException
 	 */
-	public void requestCompletedSuccesfully(String requestId, String jsonBundle) throws R2DException;
+	public void requestCompletedSuccesfully(String requestId) throws R2DException;
 
 	
 	/**
 	 * 
 	 * @param requestId
-	 * @param jsonBundle: json FHIR bundle containing the health data
+	 * @param failureMsg
 	 * 
 	 * @return
 	 * @throws R2DException
 	 */
-	public void requestCompletedUnsuccesfully(String requestId,  String jsonBundle) throws R2DException;
+	public void requestCompletedUnsuccesfully(String requestId,  String failureMsg) throws R2DException;
 
 }

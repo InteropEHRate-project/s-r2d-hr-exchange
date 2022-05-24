@@ -23,7 +23,7 @@
 	</appender>
 	
     <!-- Logger for eu.interopehrate -->
-	<logger name="eu.interopehrate" level="INFO" additivity="false">
+	<logger name="eu.interopehrate" level="DEBUG" additivity="false">
         <appender-ref ref="FILE"/>
         <appender-ref ref="CONSOLE"/>
     </logger>

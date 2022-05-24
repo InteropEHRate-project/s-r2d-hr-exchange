@@ -3,12 +3,12 @@ package eu.interopehrate.r2d.services;
 import java.io.IOException;
 import java.util.Base64;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import eu.interopehrate.r2d.Configuration;
@@ -26,7 +26,7 @@ import eu.interopehrate.r2d.security.SecurityConstants;
 @Component
 public class RESTEHRService implements EHRService {
 	
-	private static final Log logger = LogFactory.getLog(RESTEHRService.class);
+	private static final Logger logger = LoggerFactory.getLogger(RESTEHRService.class);
 	/**
 	 * key for storing the id of the R2D Eidas Token before sending it to EHR
 	 */
@@ -54,12 +54,12 @@ public class RESTEHRService implements EHRService {
 		httpGet.addHeader("Accept-Language", r2dRequest.getPreferredLanguages());		
 
 		// #3 Sends request
-		try {
-			if (logger.isDebugEnabled())
-				logger.debug(String.format("Inovked EHR-MW service for request with id %s", r2dRequest.getId()));
+		if (logger.isDebugEnabled())
+			logger.debug(String.format("Invoking EHR-MW service for request with id %s", r2dRequest.getId()));
+		
+		try (CloseableHttpClient httpclient = HttpClients.createDefault();
+			 CloseableHttpResponse response = httpclient.execute(httpGet);) {
 			// Creates the HttpClient
-			CloseableHttpClient httpclient = HttpClients.createDefault();
-			CloseableHttpResponse response = httpclient.execute(httpGet);
 			if (response.getStatusLine().getStatusCode() != 200) {
 			    String error = String.format("Received error %s from EHR-MW: %s", response.getStatusLine().getStatusCode(), "");
 				logger.error(error);
@@ -69,7 +69,7 @@ public class RESTEHRService implements EHRService {
 		} catch (IOException ioe) {
 			logger.error("Error while forwarding request to EHR-MW", ioe);
 			throw new R2DException(R2DException.INTERNAL_ERROR, ioe);
-		}
+		} 
 	}
 
 }
