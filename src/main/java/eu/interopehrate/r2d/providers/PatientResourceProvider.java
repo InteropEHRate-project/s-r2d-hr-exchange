@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import ca.uhn.fhir.rest.annotation.Operation;
 import ca.uhn.fhir.rest.annotation.Search;
+import ca.uhn.fhir.rest.server.exceptions.InternalErrorException;
 import ca.uhn.fhir.rest.server.exceptions.NotImplementedOperationException;
 import eu.interopehrate.r2d.exceptions.R2DException;
 import eu.interopehrate.r2d.model.Citizen;
@@ -44,8 +45,12 @@ public class PatientResourceProvider extends AbstractResourceProvider {
 		Citizen citizen = (Citizen)theRequest.getAttribute(SecurityConstants.CITIZEN_ATTR_NAME);
 		String authToken = theRequest.getHeader(SecurityConstants.AUTH_HEADER);
 		// starts request processing
-		requestProcessor.startRequestProcessing(r2dRequest, citizen.getPersonIdentifier(), authToken);
-		
+		try {
+			requestProcessor.startRequestProcessing(r2dRequest, citizen.getPersonIdentifier(), authToken);
+		} catch (R2DException r2de) {
+			throw new InternalErrorException(r2de.getCause());
+		}
+
 		return new Bundle();
 	}
 

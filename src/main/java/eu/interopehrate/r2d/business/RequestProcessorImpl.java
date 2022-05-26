@@ -42,7 +42,7 @@ public class RequestProcessorImpl implements RequestProcessor {
 	private static final Logger logger = LoggerFactory.getLogger(RequestProcessorImpl.class);
 	private static final String MAX_CONCURRENT_REQUEST_PROPERTY =  "r2da.maxConcurrentRunningRequestPerDay";
 	private static int MAX_CONCURRENT_REQUEST;
-	private static final String CACHE_DURATION_PROPERTY =  "r2da.cacheDurationInDays";
+	private static final String EQUIVALENCE_PERIOD_PROPERTY =  "r2da.equivalencePeriodInDays";
 	private static int CACHE_DURATION_IN_DAYS;
 
 	@Autowired(required = true)
@@ -57,10 +57,16 @@ public class RequestProcessorImpl implements RequestProcessor {
 	private BundleProvenanceBuilder provenanceBuilder;
 	
 	public RequestProcessorImpl() {
+		try {
 		// Retrieves MAX_CONCURRENT_REQUEST from properties file
 		MAX_CONCURRENT_REQUEST = Integer.parseInt(Configuration.getProperty(MAX_CONCURRENT_REQUEST_PROPERTY));
 		// Retrieves CACHE_DURATION_IN_DAYS from properties file
-		CACHE_DURATION_IN_DAYS = Integer.parseInt(Configuration.getProperty(CACHE_DURATION_PROPERTY));
+		CACHE_DURATION_IN_DAYS = Integer.parseInt(Configuration.getProperty(EQUIVALENCE_PERIOD_PROPERTY));
+		} catch (Exception e) {
+			logger.error("Please check these properties in the configuration file {} {}", 
+					MAX_CONCURRENT_REQUEST_PROPERTY, EQUIVALENCE_PERIOD_PROPERTY);
+			throw e;
+		}
 		
     	// Creates the instance of BundleProvenanceBuilder to add 
 		// Provenance info to bundles produced by EHR-MW
@@ -106,7 +112,7 @@ public class RequestProcessorImpl implements RequestProcessor {
 		R2DRequest newR2DRequest = new R2DRequest(r2dQuery, eidasCitizenId);
 		newR2DRequest.setPreferredLanguages(preferredLanguages);
 		newR2DRequest = requestRepository.save(newR2DRequest);
-		logger.info(String.format("Created persistent request: %s for URL: %s", newR2DRequest.getId(), newR2DRequest.getUri()));		
+		logger.info(String.format("Created persistent id: %s to request: %s", newR2DRequest.getId(), newR2DRequest.getUri()));		
 		
 		return newR2DRequest;
 	}
@@ -144,13 +150,13 @@ public class RequestProcessorImpl implements RequestProcessor {
 			if (equivalentRequest != null) {
 				// #2.1 if there is an equivalent request
 				if (logger.isDebugEnabled())
-					logger.debug("Found a valid cached response: {}", equivalentRequest.getFirstResponseId());
+					logger.debug("Found a valid cached response from request: {}", equivalentRequest.getId());
 				r2dRequest.addResponseId(equivalentRequest.getFirstResponseId());
 				r2dRequest.setStatus(RequestStatus.COMPLETED);
 			} else {
 				// #2.2 if there is no cached response sends the request to the EHR
 				if (logger.isDebugEnabled())
-					logger.debug("No cached response, sends request to EHR...");
+					logger.debug("No cached response, sending request to EHR...");
 				ehrService.sendRequest(r2dRequest, authToken);
 				r2dRequest.setStatus(RequestStatus.RUNNING);
 			}

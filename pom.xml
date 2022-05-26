@@ -150,6 +150,12 @@
 		  <groupId>eu.interopehrate</groupId>
 		  <artifactId>iehr-provenance</artifactId>
 		  <version>0.0.2</version>
+		  <exclusions>
+		        <exclusion> 
+		          <groupId>org.slf4j</groupId>
+		          <artifactId>slf4j-simple</artifactId>
+		        </exclusion>
+	      </exclusions> 
 		</dependency>
 		<!-- DB dependencies -->			
 		<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->

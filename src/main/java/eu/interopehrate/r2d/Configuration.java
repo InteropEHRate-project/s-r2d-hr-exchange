@@ -1,6 +1,7 @@
 package eu.interopehrate.r2d;
 
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.Properties;
 
 public final class Configuration {
@@ -24,6 +25,10 @@ public final class Configuration {
 		}
 	}
 
+	public static Enumeration<Object> getAllProperties() {
+		return config.keys();
+	}
+	
 	public static String getProperty(String name) {
 		return config.getProperty(name);
 	}

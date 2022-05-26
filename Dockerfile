@@ -23,19 +23,21 @@ RUN rm -rf /usr/local/tomcat/webapps/*
 #
 COPY ./tomcat/server.xml /usr/local/tomcat/conf/server.xml
 COPY ./tomcat/keystore.p12 /usr/local/tomcat/conf/keystore.p12
+COPY ./tomcat/seven.token /usr/local/tomcat/seven.token
+COPY ./tomcat/ten.token /usr/local/tomcat/ten.token
 
 #
-# Expose only the https port
+# Ports to expose
 #
-# EXPOSE 8443/tcp
+#EXPOSE 8443/tcp
 EXPOSE 8080/tcp
 
 #
 # Copy the R2DA WAR file to be deployed as web app
 #
-COPY ./target/iehr-docker.war /usr/local/tomcat/webapps/iehr.war
+COPY ./target/iehr-ftgm.war /usr/local/tomcat/webapps/iehr.war
 
 #
 # Copy the EHR-MW WAR file to be deployed as web app
 #
-COPY ./target/ehr-docker.war /usr/local/tomcat/webapps/ehr.war
+COPY ./target/ehr-ftgm.war /usr/local/tomcat/webapps/ehr.war

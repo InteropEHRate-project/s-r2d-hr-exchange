@@ -66,7 +66,7 @@ public class RESTEHRService implements EHRService {
 				throw new R2DException(R2DException.COMMUNICATION_ERROR, error);
 			} else
 				logger.info(String.format("Request %s forwarded successfully to EHR-MW", r2dRequest.getId()));
-		} catch (IOException ioe) {
+		} catch (Exception ioe) {
 			logger.error("Error while forwarding request to EHR-MW", ioe);
 			throw new R2DException(R2DException.INTERNAL_ERROR, ioe);
 		} 

@@ -27,10 +27,15 @@ public class AuthenticatorFilter implements Filter {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticatorFilter.class);
 	
 	private static final String EHR_SERVICE_CREDENTIALS_INIT_PARAM = "EHR_SERVICE_CREDENTIALS";
-	private static final String EHR_SERVICE_URLS_INIT_PARAM = "EHR_SERVICE_URLS";
-	private static final String CITIZEN_URLS_INIT_PARAM = "CITIZEN_URLS";
+	private static final String EHR_SERVICE_URLS_INIT_PARAM = "EHR_SERVICE_ALLOWED_URLS";
+
+	private static final String ADMIN_CREDENTIALS_INIT_PARAM = "ADMIN_CREDENTIALS";
+	private static final String ADMIN_ALLOWED_URLS_INIT_PARAM = "ADMIN_ALLOWED_URLS";
+
+	private static final String CITIZEN_URLS_INIT_PARAM = "CITIZEN_ALLOWED_URLS";
 	
 	private String ehrServiceCredentials;
+	private String adminCredentials;
 	@SuppressWarnings("unused")
 	private String[] ehrServiceURLs;
 	@SuppressWarnings("unused")
@@ -79,7 +84,7 @@ public class AuthenticatorFilter implements Filter {
 			final byte[] decodedBytes  = Base64.getDecoder().decode(base64Credentials.getBytes());
 		    final String credentials = new String(decodedBytes);
 		    if (!credentials.equals(ehrServiceCredentials)) {
-				LOGGER.error("Received a request with invalid credentials! Request is blocked!");
+				LOGGER.error("Request {} has invalid credentials! Request is blocked!", hReq.getRequestURL());
 				hRes.sendError(HttpStatus.SC_UNAUTHORIZED, "The provided credentials are not valid! The request cannot be processed.");			
 				return;
 		    }

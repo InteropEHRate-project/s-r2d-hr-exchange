@@ -17,6 +17,7 @@ import ca.uhn.fhir.rest.annotation.OptionalParam;
 import ca.uhn.fhir.rest.annotation.RequiredParam;
 import ca.uhn.fhir.rest.annotation.Search;
 import ca.uhn.fhir.rest.param.DateParam;
+import ca.uhn.fhir.rest.server.exceptions.InternalErrorException;
 import eu.interopehrate.r2d.exceptions.R2DException;
 import eu.interopehrate.r2d.model.Citizen;
 import eu.interopehrate.r2d.model.R2DRequest;
@@ -43,7 +44,11 @@ public class EncounterResourceProvider extends AbstractResourceProvider {
 		Citizen citizen = (Citizen)theRequest.getAttribute(SecurityConstants.CITIZEN_ATTR_NAME);
 		String authToken = theRequest.getHeader(SecurityConstants.AUTH_HEADER);
 		// starts request processing
-		requestProcessor.startRequestProcessing(r2dRequest, citizen.getPersonIdentifier(), authToken);
+		try {
+			requestProcessor.startRequestProcessing(r2dRequest, citizen.getPersonIdentifier(), authToken);
+		} catch (R2DException r2de) {
+			throw new InternalErrorException(r2de.getCause());
+		}
 				
 		// Always returns an empty list, the fullfilled one 
 		// will be retrived by the REST callback implemented 
@@ -59,7 +64,11 @@ public class EncounterResourceProvider extends AbstractResourceProvider {
 		Citizen citizen = (Citizen)theRequest.getAttribute(SecurityConstants.CITIZEN_ATTR_NAME);
 		String authToken = theRequest.getHeader(SecurityConstants.AUTH_HEADER);
 		// starts request processing
-		requestProcessor.startRequestProcessing(r2dRequest, citizen.getPersonIdentifier(), authToken);
+		try {
+			requestProcessor.startRequestProcessing(r2dRequest, citizen.getPersonIdentifier(), authToken);
+		} catch (R2DException r2de) {
+			throw new InternalErrorException(r2de.getCause());
+		}
 		
 		return new Bundle();
 	}

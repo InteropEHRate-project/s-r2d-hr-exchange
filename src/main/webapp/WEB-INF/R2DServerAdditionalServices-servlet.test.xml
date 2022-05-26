@@ -21,8 +21,8 @@
    	<mvc:annotation-driven />
 
 	<!--  scans for @Service, @Controller -->
-	<context:component-scan base-package="eu.interopehrate.r2d, eu.interopehrate.r2d.rest, 
-	eu.interopehrate.r2d.communication, eu.interopehrate.r2d.providers" />
+	<context:component-scan base-package="eu.interopehrate.r2d, eu.interopehrate.r2d.rest,
+	 eu.interopehrate.r2d.providers" />
 	
 	<!--  Instantiates the EntityManagerFactoryBean -->
 	<bean id="entityManagerFactory"
@@ -63,9 +63,9 @@
     <bean class="eu.interopehrate.r2d.business.DatabaseCleaner"  id="databaseCleaner" scope="singleton" />
 
 	<!--  Every minute = 0 * * ? * *, Every Hour = 0 0 * ? * * -->
-	<!-- task:scheduled-tasks scheduler="scheduler">
-	    <task:scheduled ref="databaseCleaner" method="deleteOldResponse" initial-delay="60000" cron="0 * * ? * *" />
-	</task:scheduled-tasks -->
+	<task:scheduled-tasks scheduler="scheduler">
+	    <task:scheduled ref="databaseCleaner" method="deleteExpiredFiles" cron="0 0 * ? * *" />
+	</task:scheduled-tasks>
 
 	<!-- Activates scanning of @Repository classes -->
     <jpa:repositories base-package="eu.interopehrate.r2d.dao" />

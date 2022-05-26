@@ -43,11 +43,19 @@
 			<param-value>ehrservice@interopehrate.eu:int3rop3hr@t3</param-value> 
 		</init-param>
 		<init-param>
-			<param-name>EHR_SERVICE_URLS</param-name>
+			<param-name>EHR_SERVICE_ALLOWED_URLS</param-name>
 			<param-value>/iehr/services/callbacks/*</param-value> 
 		</init-param>
 		<init-param>
-			<param-name>CITIZEN_URLS</param-name>
+			<param-name>ADMIN_CREDENTIALS</param-name>
+			<param-value>ehrservice@interopehrate.eu:int3rop3hr@t3</param-value> 
+		</init-param>
+		<init-param>
+			<param-name>ADMIN_ALLOWED_URLS</param-name>
+			<param-value>/iehr/services/admin/*</param-value> 
+		</init-param>
+		<init-param>
+			<param-name>CITIZEN_ALLOWED_URLS</param-name>
 			<param-value>
 			/iehr/r2da/*, 
 			/iehr/services/requests/*
@@ -58,5 +66,9 @@
 		<filter-name>R2DAccess Server Authentication Filter</filter-name>
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
+
+	<welcome-file-list>
+		<welcome-file>index.jsp</welcome-file>
+	</welcome-file-list>  
 
 </web-app>

@@ -22,7 +22,7 @@
 
 	<!--  scans for @Service, @Controller -->
 	<context:component-scan base-package="eu.interopehrate.r2d, eu.interopehrate.r2d.rest, 
-	eu.interopehrate.r2d.communication, eu.interopehrate.r2d.providers" />
+	eu.interopehrate.r2d.providers" />
 	
 	<!--  Instantiates the EntityManagerFactoryBean -->
 	<bean id="entityManagerFactory"
