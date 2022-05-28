@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ListIterator;
 
 import javax.servlet.ServletException;
 
@@ -15,10 +16,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.cors.CorsConfiguration;
 
+import com.google.common.collect.Lists;
+
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.server.IResourceProvider;
 import ca.uhn.fhir.rest.server.RestfulServer;
 import ca.uhn.fhir.rest.server.interceptor.CorsInterceptor;
+import ca.uhn.fhir.util.VersionUtil;
 import eu.interopehrate.fhir.provenance.ResourceSigner;
 import eu.interopehrate.r2d.interceptors.AsyncRequestHandler;
 import eu.interopehrate.r2d.interceptors.CapabilityStatementCustomizer;
@@ -49,7 +53,7 @@ public class R2DAccessServer extends RestfulServer {
 	@Override
 	protected void initialize() throws ServletException {
 		if (logger.isDebugEnabled())
-			logger.debug("Starting R2DAccessServer version: {}", Configuration.getProperty("r2da.version"));
+			logger.debug("Starting R2DAccessServer version: {}", Configuration.getVersion());
 
 		FHIR_CONTEXT = getFhirContext();
 		
@@ -138,6 +142,17 @@ public class R2DAccessServer extends RestfulServer {
 		}
 	}
 
+	protected String createPoweredByHeaderComponentName() {
+		return "";
+	}
+	
+	protected String createPoweredByHeaderProductName() {
+		return "R2D Access Server";
+	}
 
-
+	
+	protected String createPoweredByHeaderProductVersion() {
+		return Configuration.getVersion();
+	}
+	
 }

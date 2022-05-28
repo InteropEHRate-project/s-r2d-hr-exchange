@@ -35,9 +35,11 @@ EXPOSE 8080/tcp
 #
 # Copy the R2DA WAR file to be deployed as web app
 #
-COPY ./target/iehr-ftgm.war /usr/local/tomcat/webapps/iehr.war
+#COPY ./target/r2da-chu.war /usr/local/tomcat/webapps/r2da.war
+COPY ./target/r2da-ftgm.war /usr/local/tomcat/webapps/r2da.war
 
 #
 # Copy the EHR-MW WAR file to be deployed as web app
 #
+#COPY ./target/ehr-chu.war /usr/local/tomcat/webapps/ehr.war
 COPY ./target/ehr-ftgm.war /usr/local/tomcat/webapps/ehr.war

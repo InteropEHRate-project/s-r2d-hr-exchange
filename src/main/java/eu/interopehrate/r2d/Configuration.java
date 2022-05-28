@@ -53,4 +53,7 @@ public final class Configuration {
 		return config.getProperty("r2da.storage.path");
 	}
 	
+	public static String getVersion() {
+		return config.getProperty("r2da.version");
+	}
 }

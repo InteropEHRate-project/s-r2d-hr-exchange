@@ -204,12 +204,11 @@
 	</build>
 	
 	<profiles>
-	
-	
+
 		<profile>
-			<id>ftgm</id>
+			<id>chu</id>
             <build>
-                <finalName>iehr-ftgm</finalName>
+                <finalName>r2da-chu</finalName>
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -224,12 +223,76 @@
                                 </goals>
                                 <configuration>
                                     <target>
+                                    	<!-- delete keystore not needed -->
+                                        <delete file="${project.build.outputDirectory}/FTGM_iehr.p12"/>
+                                    	
+                                    	<!-- application.properties file -->
+                                        <delete file="${project.build.outputDirectory}/application.properties"/>
+                                        <copy file="src/main/resources/application.chu.properties"
+                                              tofile="${project.build.outputDirectory}/application.properties"/>
+                                        <delete file="${project.build.outputDirectory}/application.ftgm.properties"/>
+                                        <delete file="${project.build.outputDirectory}/application.test.properties"/>
+                                        <delete file="${project.build.outputDirectory}/application.chu.properties"/>
+
+                                    	<!-- logback.xml file -->
+                                        <delete file="${project.build.outputDirectory}/logback.xml"/>
+                                        <copy file="src/main/resources/logback.docker.xml"
+                                              tofile="${project.build.outputDirectory}/logback.xml"/>
+                                        <delete file="${project.build.outputDirectory}/logback.test.xml"/>                                       
+                                        <delete file="${project.build.outputDirectory}/logback.docker.xml"/>                                       
+                                    </target>
+                                </configuration>
+                            </execution>
+                            
+                            <execution>
+                            	<id>2</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                     	<!-- R2DServerAdditionalServices-servlet.xml file -->
+                                        <copy file="src/main/webapp/WEB-INF/R2DServerAdditionalServices-servlet.docker.xml"
+                                              tofile="${project.build.directory}/iehr-ftgm/WEB-INF/R2DServerAdditionalServices-servlet.xml"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+		</profile>
+	
+	
+		<profile>
+			<id>ftgm</id>
+            <build>
+                <finalName>r2da-ftgm</finalName>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.0.0</version>
+                        <executions>
+                            <execution>
+                            	<id>1</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                    	<!-- delete keystore not needed -->
+                                        <delete file="${project.build.outputDirectory}/CHU_iehr.p12"/>
+
                                     	<!-- application.properties file -->
                                         <delete file="${project.build.outputDirectory}/application.properties"/>
                                         <copy file="src/main/resources/application.ftgm.properties"
                                               tofile="${project.build.outputDirectory}/application.properties"/>
                                         <delete file="${project.build.outputDirectory}/application.ftgm.properties"/>
                                         <delete file="${project.build.outputDirectory}/application.test.properties"/>
+                                        <delete file="${project.build.outputDirectory}/application.chu.properties"/>
 
                                     	<!-- logback.xml file -->
                                         <delete file="${project.build.outputDirectory}/logback.xml"/>
@@ -250,7 +313,7 @@
                                 <configuration>
                                     <target>
                                      	<!-- R2DServerAdditionalServices-servlet.xml file -->
-                                        <copy file="src/main/webapp/WEB-INF/R2DServerAdditionalServices-servlet.ftgm.xml"
+                                        <copy file="src/main/webapp/WEB-INF/R2DServerAdditionalServices-servlet.docker.xml"
                                               tofile="${project.build.directory}/iehr-ftgm/WEB-INF/R2DServerAdditionalServices-servlet.xml"/>
                                     </target>
                                 </configuration>
@@ -265,7 +328,7 @@
 		<profile>
 			<id>test</id>
             <build>
-                <finalName>iehr-test</finalName>
+                <finalName>r2da-test</finalName>
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -286,6 +349,7 @@
                                               tofile="${project.build.outputDirectory}/application.properties"/>
                                         <delete file="${project.build.outputDirectory}/application.test.properties"/>
                                         <delete file="${project.build.outputDirectory}/application.ftgm.properties"/>
+                                        <delete file="${project.build.outputDirectory}/application.chu.properties"/>
 
                                     	<!-- logback.xml file -->
                                         <delete file="${project.build.outputDirectory}/logback.xml"/>

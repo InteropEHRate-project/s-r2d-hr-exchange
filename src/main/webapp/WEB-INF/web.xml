@@ -20,6 +20,7 @@
 	<servlet-mapping>
 		<servlet-name>R2DServerAdditionalServices</servlet-name>
 		<url-pattern>/services/*</url-pattern>
+		
 	</servlet-mapping>
 	
    <!-- 
@@ -32,7 +33,7 @@
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>R2DAccessServer</servlet-name>
-		<url-pattern>/r2da/*</url-pattern>
+		<url-pattern>/*</url-pattern>
 	</servlet-mapping>	
 
 	<filter>
@@ -43,22 +44,49 @@
 			<param-value>ehrservice@interopehrate.eu:int3rop3hr@t3</param-value> 
 		</init-param>
 		<init-param>
-			<param-name>EHR_SERVICE_ALLOWED_URLS</param-name>
-			<param-value>/iehr/services/callbacks/*</param-value> 
-		</init-param>
-		<init-param>
 			<param-name>ADMIN_CREDENTIALS</param-name>
-			<param-value>ehrservice@interopehrate.eu:int3rop3hr@t3</param-value> 
+			<param-value>admin@interopehrate.eu:int3rop3hr@t3</param-value> 
 		</init-param>
 		<init-param>
-			<param-name>ADMIN_ALLOWED_URLS</param-name>
-			<param-value>/iehr/services/admin/*</param-value> 
-		</init-param>
-		<init-param>
-			<param-name>CITIZEN_ALLOWED_URLS</param-name>
+			<param-name>EHR_SERVICE_ALLOWED_URIS</param-name>
 			<param-value>
-			/iehr/r2da/*, 
-			/iehr/services/requests/*
+			/r2da/services/callbacks/*
+			</param-value> 
+		</init-param>
+		<init-param>
+			<param-name>ADMIN_ALLOWED_URIS</param-name>
+			<param-value>
+			/r2da/services/admin/*
+			</param-value> 
+		</init-param>
+		<init-param>
+			<param-name>CITIZEN_ALLOWED_URIS</param-name>
+			<param-value>
+			/r2da/patient, 
+			/r2da/patient/*, 
+			/r2da/encounter/*, 
+			/r2da/encounter, 
+			/r2da/observation, 
+			/r2da/diagnosticreport, 
+			/r2da/diagnosticreport/*, 
+			/r2da/composition, 
+			/r2da/composition/*, 
+			/r2da/documentreference, 
+			/r2da/documentmanifest, 
+			/r2da/condition, 
+			/r2da/immunization, 
+			/r2da/medication, 
+			/r2da/allergyintolerance, 
+			/r2da/procedure, 
+			/r2da/services/requests,
+			/r2da/services/requests/*
+			</param-value> 
+		</init-param>
+		<init-param>
+			<param-name>ANONYMOUS_ALLOWED_URIS</param-name>
+			<param-value>
+			/r2da,
+			/r2da/
 			</param-value> 
 		</init-param>
 	</filter>
@@ -66,9 +94,5 @@
 		<filter-name>R2DAccess Server Authentication Filter</filter-name>
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
-
-	<welcome-file-list>
-		<welcome-file>index.jsp</welcome-file>
-	</welcome-file-list>  
 
 </web-app>
