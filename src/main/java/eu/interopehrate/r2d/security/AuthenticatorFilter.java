@@ -17,6 +17,7 @@ import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import eu.interopehrate.r2d.Configuration;
 import eu.interopehrate.r2d.model.Citizen;
 import eu.interopehrate.sr2dsm.SR2DSM;
 import eu.interopehrate.sr2dsm.model.ResponseDetails;
@@ -25,14 +26,16 @@ import eu.interopehrate.sr2dsm.model.UserDetails;
 public class AuthenticatorFilter implements Filter {
 	private static final String EHR_SERVICE_CREDENTIALS_INIT_PARAM = "EHR_SERVICE_CREDENTIALS";
 	private static final String ADMIN_CREDENTIALS_INIT_PARAM = "ADMIN_CREDENTIALS";
-	private static final String EHR_SERVICE_URLS_INIT_PARAM = "EHR_SERVICE_ALLOWED_URIS";
-	private static final String ADMIN_URLS_INIT_PARAM = "ADMIN_ALLOWED_URIS";
-	private static final String CITIZEN_URLS_INIT_PARAM = "CITIZEN_ALLOWED_URIS";
-	private static final String ANONYMOUS_URLS_INIT_PARAM = "ANONYMOUS_ALLOWED_URIS";
+	private static final String EHR_SERVICE_URIS_INIT_PARAM = "EHR_SERVICE_ALLOWED_URIS";
+	private static final String ADMIN_URIS_INIT_PARAM = "ADMIN_ALLOWED_URIS";
+	private static final String CITIZEN_URIS_INIT_PARAM = "CITIZEN_ALLOWED_URIS";
+	private static final String ANONYMOUS_URIS_INIT_PARAM = "ANONYMOUS_ALLOWED_URIS";
+	private static final String HOME_URI_INIT_PARAM = "HOME_URI";
 	
 	private final Logger logger = LoggerFactory.getLogger(AuthenticatorFilter.class);
 	private String ehrServiceCredentials;
 	private String adminCredentials;
+	private String homeURI;
 	private String[] ehrServiceURIs;
 	private String[] adminURIs;
 	private String[] citizenURIs;
@@ -48,29 +51,33 @@ public class AuthenticatorFilter implements Filter {
 		if (adminCredentials == null)
 			throw new ServletException("Missing " + ADMIN_CREDENTIALS_INIT_PARAM + " config parameter, cannot start!");
 
-		String tmp = filterConfig.getInitParameter(EHR_SERVICE_URLS_INIT_PARAM);
+		String tmp = filterConfig.getInitParameter(EHR_SERVICE_URIS_INIT_PARAM);
 		if (tmp == null)
-			throw new ServletException("Missing " + EHR_SERVICE_URLS_INIT_PARAM + " config parameter, cannot start!");
+			throw new ServletException("Missing " + EHR_SERVICE_URIS_INIT_PARAM + " config parameter, cannot start!");
 		tmp = tmp.replaceAll("[\n\r]", "");
 		ehrServiceURIs = new StringTokenizer(tmp, ",").getTokenArray();
 		
-		tmp = filterConfig.getInitParameter(CITIZEN_URLS_INIT_PARAM);
+		tmp = filterConfig.getInitParameter(CITIZEN_URIS_INIT_PARAM);
 		if (tmp == null)
-			throw new ServletException("Missing " + CITIZEN_URLS_INIT_PARAM + " config parameter, cannot start!");
+			throw new ServletException("Missing " + CITIZEN_URIS_INIT_PARAM + " config parameter, cannot start!");
 		tmp = tmp.replaceAll("[\n\r]", "");
 		citizenURIs = new StringTokenizer(tmp, ",").getTokenArray();
 
-		tmp = filterConfig.getInitParameter(ADMIN_URLS_INIT_PARAM);
+		tmp = filterConfig.getInitParameter(ADMIN_URIS_INIT_PARAM);
 		if (tmp == null)
-			throw new ServletException("Missing " + ADMIN_URLS_INIT_PARAM + " config parameter, cannot start!");
+			throw new ServletException("Missing " + ADMIN_URIS_INIT_PARAM + " config parameter, cannot start!");
 		tmp = tmp.replaceAll("[\n\r]", "");
 		adminURIs = new StringTokenizer(tmp, ",").getTokenArray();
 
-		tmp = filterConfig.getInitParameter(ANONYMOUS_URLS_INIT_PARAM);
+		tmp = filterConfig.getInitParameter(ANONYMOUS_URIS_INIT_PARAM);
 		if (tmp == null)
-			throw new ServletException("Missing " + ANONYMOUS_URLS_INIT_PARAM + " config parameter, cannot start!");
+			throw new ServletException("Missing " + ANONYMOUS_URIS_INIT_PARAM + " config parameter, cannot start!");
 		tmp = tmp.replaceAll("[\n\r]", "");
 		anonymousURIs = new StringTokenizer(tmp, ",").getTokenArray();
+		
+		homeURI = filterConfig.getInitParameter(HOME_URI_INIT_PARAM);
+		if (homeURI == null)
+			throw new ServletException("Missing " + HOME_URI_INIT_PARAM + " config parameter, cannot start!");
 	}
 
 	
@@ -84,6 +91,17 @@ public class AuthenticatorFilter implements Filter {
 			hRes.sendError(HttpStatus.SC_UNAUTHORIZED, "Method not allowed. Request NOT AUTHORIZED!");
 			return;
 		}
+		
+		// Gets the request URI
+		String requestURI = hReq.getRequestURI().toString();
+		
+		// checks if home has been requested, in this case request is not forwarded to FHIR
+		if (requestURI.equals(homeURI) || requestURI.equals(homeURI + "/")) {
+			hRes.getWriter().format("R2DAccess Server version '%s' installed @%s is alive and kicking!", 
+					Configuration.getProperty("r2da.version"),
+					Configuration.getProperty("provenance.provider.identifier"));
+			return;
+		}
 				
 		// Detect the type of user that submits the request
 		User user = null;
@@ -95,7 +113,7 @@ public class AuthenticatorFilter implements Filter {
 		}
 		
 		// Checks if user is allowed to access request path
-		if (isAllowed(user, hReq.getRequestURI().toString())) {
+		if (isAllowed(user, requestURI)) {
 			// sets the user as a request attribute
 			hReq.setAttribute(SecurityConstants.USER_ATTR_NAME, user);
 			
@@ -168,6 +186,18 @@ public class AuthenticatorFilter implements Filter {
 	}
 	
 	private boolean match(String[] allowedPaths, String requestedPath) {
+		// Search in the anonymous URLs
+		for (String openPath : anonymousURIs) {
+			if (openPath.endsWith("*")) {
+				openPath = openPath.substring(0, openPath.length() - 1);
+				if (requestedPath.toLowerCase().startsWith(openPath.trim()))
+					return true;
+			} else if (requestedPath.equalsIgnoreCase(openPath.trim()))
+				return true;
+		}
+
+		
+		// Search in the provided URLs
 		for (String allowedPath : allowedPaths) {
 			if (allowedPath.endsWith("*")) {
 				allowedPath = allowedPath.substring(0, allowedPath.length() - 1);

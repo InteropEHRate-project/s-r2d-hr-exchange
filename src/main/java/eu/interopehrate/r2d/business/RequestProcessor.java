@@ -7,6 +7,20 @@ public interface RequestProcessor {
 
 	/**
 	 * 
+	 * @return
+	 */
+	public int getEquivalencePeriodInDays();
+
+	
+	/**
+	 * 
+	 * @param equivalencePeriodInDays
+	 */
+	public void setEquivalencePeriodInDays(int equivalencePeriodInDays);
+	
+	
+	/**
+	 * 
 	 * @param r2dUrl: URL of the requested service
 	 * @param eidasPersonIdentifier: eidasIdentifier of the requesting citizen
 	 * @param preferredLanguages: list of preferred languages of the citizen

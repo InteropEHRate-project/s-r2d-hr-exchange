@@ -254,7 +254,7 @@
                                     <target>
                                      	<!-- R2DServerAdditionalServices-servlet.xml file -->
                                         <copy file="src/main/webapp/WEB-INF/R2DServerAdditionalServices-servlet.docker.xml"
-                                              tofile="${project.build.directory}/iehr-ftgm/WEB-INF/R2DServerAdditionalServices-servlet.xml"/>
+                                              tofile="${project.build.directory}/r2da-chu/WEB-INF/R2DServerAdditionalServices-servlet.xml"/>
                                     </target>
                                 </configuration>
                             </execution>
@@ -314,7 +314,7 @@
                                     <target>
                                      	<!-- R2DServerAdditionalServices-servlet.xml file -->
                                         <copy file="src/main/webapp/WEB-INF/R2DServerAdditionalServices-servlet.docker.xml"
-                                              tofile="${project.build.directory}/iehr-ftgm/WEB-INF/R2DServerAdditionalServices-servlet.xml"/>
+                                              tofile="${project.build.directory}/r2da-ftgm/WEB-INF/R2DServerAdditionalServices-servlet.xml"/>
                                     </target>
                                 </configuration>
                             </execution>
@@ -371,7 +371,7 @@
                                     <target>
                                      	<!-- R2DServerAdditionalServices-servlet.xml file -->
                                         <copy file="src/main/webapp/WEB-INF/R2DServerAdditionalServices-servlet.test.xml"
-                                              tofile="${project.build.directory}/iehr-test/WEB-INF/R2DServerAdditionalServices-servlet.xml"/>
+                                              tofile="${project.build.directory}/r2da-test/WEB-INF/R2DServerAdditionalServices-servlet.xml"/>
                                     </target>
                                 </configuration>
                             </execution>

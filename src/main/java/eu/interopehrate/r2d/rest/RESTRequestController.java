@@ -260,12 +260,12 @@ public class RESTRequestController {
 		if (r2dRequest.getStatus() == RequestStatus.RUNNING || 
 			r2dRequest.getStatus() == RequestStatus.PARTIALLY_COMPLETED) {
 			r2dRequest.setStatus(RequestStatus.FAILED);
-			message = "Request aborted by the system administrator";
+			message = "Request aborted by the citizen";
 			r2dRequest.setFailureMessage(message);
 			
 			requestRepository.save(r2dRequest);
 		} else {
-			message = String.format("The status %s of the request %s does not allow to aborti it.", 
+			message = String.format("The status %s of the request %s does not allow to aborti t.", 
 					r2dRequest.getStatus(), r2dRequest.getId());	
 			logger.error(message);
 			httpResponse.sendError(HttpServletResponse.SC_BAD_REQUEST, message);

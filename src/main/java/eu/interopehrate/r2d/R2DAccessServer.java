@@ -8,7 +8,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.ListIterator;
 
 import javax.servlet.ServletException;
 
@@ -16,13 +15,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.cors.CorsConfiguration;
 
-import com.google.common.collect.Lists;
-
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.server.IResourceProvider;
 import ca.uhn.fhir.rest.server.RestfulServer;
 import ca.uhn.fhir.rest.server.interceptor.CorsInterceptor;
-import ca.uhn.fhir.util.VersionUtil;
 import eu.interopehrate.fhir.provenance.ResourceSigner;
 import eu.interopehrate.r2d.interceptors.AsyncRequestHandler;
 import eu.interopehrate.r2d.interceptors.CapabilityStatementCustomizer;

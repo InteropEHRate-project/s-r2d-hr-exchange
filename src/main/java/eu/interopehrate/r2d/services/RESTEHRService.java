@@ -1,6 +1,5 @@
 package eu.interopehrate.r2d.services;
 
-import java.io.IOException;
 import java.util.Base64;
 
 import org.apache.http.client.methods.CloseableHttpResponse;

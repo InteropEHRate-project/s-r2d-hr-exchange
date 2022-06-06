@@ -48,16 +48,22 @@
 			<param-value>admin@interopehrate.eu:int3rop3hr@t3</param-value> 
 		</init-param>
 		<init-param>
-			<param-name>EHR_SERVICE_ALLOWED_URIS</param-name>
+			<param-name>HOME_URI</param-name>
+			<param-value>/r2da</param-value> 
+		</init-param>
+		<!--  ANONYMOUS_ALLOWED_URIS are allowed for every role -->
+		<init-param>
+			<param-name>ANONYMOUS_ALLOWED_URIS</param-name>
 			<param-value>
-			/r2da/services/callbacks/*
 			</param-value> 
 		</init-param>
 		<init-param>
+			<param-name>EHR_SERVICE_ALLOWED_URIS</param-name>
+			<param-value>/r2da/services/callbacks/*</param-value> 
+		</init-param>
+		<init-param>
 			<param-name>ADMIN_ALLOWED_URIS</param-name>
-			<param-value>
-			/r2da/services/admin/*
-			</param-value> 
+			<param-value>/r2da/services/admin/*</param-value> 
 		</init-param>
 		<init-param>
 			<param-name>CITIZEN_ALLOWED_URIS</param-name>
@@ -80,13 +86,6 @@
 			/r2da/procedure, 
 			/r2da/services/requests,
 			/r2da/services/requests/*
-			</param-value> 
-		</init-param>
-		<init-param>
-			<param-name>ANONYMOUS_ALLOWED_URIS</param-name>
-			<param-value>
-			/r2da,
-			/r2da/
 			</param-value> 
 		</init-param>
 	</filter>

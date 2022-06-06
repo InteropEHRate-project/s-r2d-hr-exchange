@@ -23,8 +23,6 @@ RUN rm -rf /usr/local/tomcat/webapps/*
 #
 COPY ./tomcat/server.xml /usr/local/tomcat/conf/server.xml
 COPY ./tomcat/keystore.p12 /usr/local/tomcat/conf/keystore.p12
-COPY ./tomcat/seven.token /usr/local/tomcat/seven.token
-COPY ./tomcat/ten.token /usr/local/tomcat/ten.token
 
 #
 # Ports to expose

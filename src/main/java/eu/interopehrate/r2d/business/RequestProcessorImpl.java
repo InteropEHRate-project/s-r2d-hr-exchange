@@ -39,11 +39,12 @@ import eu.interopehrate.r2d.utils.URLUtility;
 
 @Component
 public class RequestProcessorImpl implements RequestProcessor {
-	private static final Logger logger = LoggerFactory.getLogger(RequestProcessorImpl.class);
 	private static final String MAX_CONCURRENT_REQUEST_PROPERTY =  "r2da.maxConcurrentRunningRequestPerDay";
-	private static int MAX_CONCURRENT_REQUEST;
 	private static final String EQUIVALENCE_PERIOD_PROPERTY =  "r2da.equivalencePeriodInDays";
-	private static int CACHE_DURATION_IN_DAYS;
+
+	private final Logger logger = LoggerFactory.getLogger(RequestProcessorImpl.class);
+	private int maxConcurrentRequest;
+	private int equivalencePeriodInDays;
 
 	@Autowired(required = true)
 	private EHRService ehrService;
@@ -59,9 +60,9 @@ public class RequestProcessorImpl implements RequestProcessor {
 	public RequestProcessorImpl() {
 		try {
 		// Retrieves MAX_CONCURRENT_REQUEST from properties file
-		MAX_CONCURRENT_REQUEST = Integer.parseInt(Configuration.getProperty(MAX_CONCURRENT_REQUEST_PROPERTY));
+		maxConcurrentRequest = Integer.parseInt(Configuration.getProperty(MAX_CONCURRENT_REQUEST_PROPERTY));
 		// Retrieves CACHE_DURATION_IN_DAYS from properties file
-		CACHE_DURATION_IN_DAYS = Integer.parseInt(Configuration.getProperty(EQUIVALENCE_PERIOD_PROPERTY));
+		equivalencePeriodInDays = Integer.parseInt(Configuration.getProperty(EQUIVALENCE_PERIOD_PROPERTY));
 		} catch (Exception e) {
 			logger.error("Please check these properties in the configuration file {} {}", 
 					MAX_CONCURRENT_REQUEST_PROPERTY, EQUIVALENCE_PERIOD_PROPERTY);
@@ -94,7 +95,7 @@ public class RequestProcessorImpl implements RequestProcessor {
 		// Before accepting the request some checks must be executed
 		
 		// #1 Checks how many running requests the citizen has
-		if (MAX_CONCURRENT_REQUEST > 0) {
+		if (maxConcurrentRequest > 0) {
 			LocalDateTime now = LocalDateTime.now();
 			Date to = Date.from(now.atZone(ZoneId.systemDefault()).toInstant());
 			
@@ -104,7 +105,7 @@ public class RequestProcessorImpl implements RequestProcessor {
 			long size = requestRepository.countRunningRequestOfTheCitizenInPeriod(eidasCitizenId,
 					from, to);
 			
-			if (size == MAX_CONCURRENT_REQUEST)
+			if (size == maxConcurrentRequest)
 				throw new TooManyRequestException(
 						String.format("Too many concurrent running request: %d. Please try later.", size));			
 		}
@@ -130,12 +131,12 @@ public class RequestProcessorImpl implements RequestProcessor {
 		try {
 			R2DRequest equivalentRequest = null;
 			// #1 checks if there is a cached response
-			if (CACHE_DURATION_IN_DAYS > 0) {
+			if (equivalencePeriodInDays > 0) {
 				if (logger.isDebugEnabled())
 					logger.debug("Looks for a valid cached response...");
 				
 				LocalDateTime toLtd = LocalDateTime.now();
-				LocalDateTime fromLdt  = toLtd.minusDays(CACHE_DURATION_IN_DAYS);
+				LocalDateTime fromLdt  = toLtd.minusDays(equivalencePeriodInDays);
 				Date to = Date.from(toLtd.atZone(ZoneId.systemDefault()).toInstant());
 				Date from = Date.from(fromLdt.atZone(ZoneId.systemDefault()).toInstant());
 
@@ -270,6 +271,28 @@ public class RequestProcessorImpl implements RequestProcessor {
 		theR2DRequest.setFailureMessage(failureMsg);
 		requestRepository.save(theR2DRequest);			
 		logger.info(String.format("Request %s unsuccesfully completed the execution!", requestId));
+	}
+
+
+	public int getMaxConcurrentRequest() {
+		return maxConcurrentRequest;
+	}
+
+
+	public void setMaxConcurrentRequest(int maxConcurrentRequest) {
+		this.maxConcurrentRequest = maxConcurrentRequest;
+	}
+
+
+	@Override
+	public int getEquivalencePeriodInDays() {
+		return equivalencePeriodInDays;
+	}
+
+
+	@Override
+	public void setEquivalencePeriodInDays(int equivalencePeriodInDays) {
+		this.equivalencePeriodInDays = equivalencePeriodInDays;
 	}
 	
 	/*

@@ -32,6 +32,14 @@ public interface RequestRepository extends CrudRepository<R2DRequest, String>{
 			+ "ORDER BY r.creationTime DESC ")
 	public List<R2DRequest> findRunningRequestOfTheCitizen(@Param("citizenId") String citizenId);
 
+	// Counts all the requests of a citizen in a certain state
+	@Query("SELECT r FROM R2DRequest r "
+			+ "WHERE r.citizenId = :citizenId "
+			+ "AND r.status = :status "
+			+ "ORDER BY r.creationTime DESC ")
+	public List<R2DRequest> findByCitizenIdAndByStatus(@Param("citizenId") String citizenId,
+			@Param("status") String status);
+
 	
 	// Counts all the RUNNING requests of a citizen
 	@Query("SELECT COUNT(r) FROM R2DRequest r "
