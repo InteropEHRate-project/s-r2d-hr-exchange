@@ -102,6 +102,7 @@ public class RESTCallbackController {
 			if (theBody != null && theBody.trim().length() > 0 )
 				failureMsg = theBody;
 			
+			
 			requestProcessor.requestCompletedUnsuccesfully(theRequestId, failureMsg);
 		} catch (R2DException r2de) {
 			if (r2de.getCode() == R2DException.REQUEST_NOT_FOUND) {

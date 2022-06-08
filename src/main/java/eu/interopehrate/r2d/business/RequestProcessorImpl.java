@@ -5,16 +5,23 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Base64.Decoder;
 
+import org.apache.commons.io.IOUtils;
 import org.hl7.fhir.r4.model.Address;
+import org.hl7.fhir.r4.model.Base64BinaryType;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Identifier;
+import org.hl7.fhir.r4.model.Media;
 import org.hl7.fhir.r4.model.Organization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +30,7 @@ import org.springframework.stereotype.Component;
 
 import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.parser.IParser;
+import ca.uhn.fhir.util.BundleUtil;
 import eu.interopehrate.fhir.provenance.BundleProvenanceBuilder;
 import eu.interopehrate.r2d.Configuration;
 import eu.interopehrate.r2d.MemoryLogger;
@@ -56,6 +64,7 @@ public class RequestProcessorImpl implements RequestProcessor {
 	private RequestRepository requestRepository;
 	
 	private BundleProvenanceBuilder provenanceBuilder;
+	
 	
 	public RequestProcessorImpl() {
 		try {
@@ -195,55 +204,63 @@ public class RequestProcessorImpl implements RequestProcessor {
 		Bundle theBundle = null;
 		String phase = "parsing received JSON";
 		try {
-			// #2.1 Parse results to verifies the bundle
+			// #2.1 Parse results produced by IHS
 			final IParser parser = R2DAccessServer.FHIR_CONTEXT.newJsonParser();
 			// creates the name of the file that store the results
 			final String ihsFhirFileName = Configuration.getDBPath() + requestId +  ".json";
 			try (InputStream ihsFhirFile = new FileInputStream(new File(ihsFhirFileName))) {
 				theBundle = (Bundle) parser.parseResource(ihsFhirFile);
 				if (logger.isDebugEnabled())
-					logger.debug("Response contains a valid FHIR Bundle with {} entries", theBundle.getEntry().size());
-				
+					logger.debug("Response contains a valid FHIR Bundle with {} entries", 
+							theBundle.getEntry().size());
 			} catch (DataFormatException dfe) {
 				logger.error("Response contains a not valid FHIR Bundle: {}", dfe.getMessage());
 				throw dfe;
 			}
 			
+			// #2.2 Adds the images that have been removed by the EHRMW
+			phase = "adding removed images";
+			replaceImagesInBundle(theBundle, requestId);
+			if (logger.isDebugEnabled())
+				logger.debug("Added removed images to the bundle");
 			
-			// #2.2 Adds the Provenance information to the resources in the bundle
+			// #2.3 Adds the Provenance information to the resources in the bundle
 			phase = "creating provenance info";
 			provenanceBuilder.addProvenanceToBundleItems(theBundle);
 			if (logger.isDebugEnabled())
 				logger.debug("Added Provenance info to the Bundle, now contains {} entries", theBundle.getEntry().size());
-			// #2.3 Writes signed Bundle to file
+
+			// #2.4 Writes signed Bundle to file
 			try(Writer writer = new BufferedWriter(new FileWriter(ihsFhirFileName, false))) {
 				parser.setPrettyPrint(true);
 				parser.encodeResourceToWriter(theBundle, writer);				
 			}
 			
-			// #2.4 Store response to the DB
+			// #2.5 Store response to the DB
 			phase = "saving response to DB";
 			R2DResponse response = new R2DResponse();
 			response.setResponseFileName(ihsFhirFileName);
 			response.setCitizenId(theR2DRequest.getCitizenId());
 			responseRepository.save(response);
-			// #2.5 Update status of the request to the DB
+			
+			// #2.6 Update status of the request to the DB
 			theR2DRequest.addResponseId(response.getId());
 			theR2DRequest.setStatus(RequestStatus.COMPLETED);
 			requestRepository.save(theR2DRequest);			
 			logger.info(String.format("Response of request %s succesfully saved to database. Execution completed!", requestId));
 			theBundle = null;
 		} catch (Exception e) {
-			logger.error(String.format("Error while %s: %s ", phase, e.getMessage()));
+			String msg = e.getMessage();
+			if (msg.length() > 250)
+				msg = msg.substring(0, 250);
+			logger.error(String.format("Error while %s: %s ", phase, msg));
 			logger.error(e.getMessage(), e);
 			// update request status
 			theR2DRequest.setStatus(RequestStatus.FAILED);
-			String failureMsg = "The received bundle is not valid: " + e.getMessage();
-			theR2DRequest.setFailureMessage(failureMsg);
+			theR2DRequest.setFailureMessage(msg);
 			requestRepository.save(theR2DRequest);
 		}
 		MemoryLogger.logMemory();
-		
 	}
 	
 
@@ -294,6 +311,34 @@ public class RequestProcessorImpl implements RequestProcessor {
 	public void setEquivalencePeriodInDays(int equivalencePeriodInDays) {
 		this.equivalencePeriodInDays = equivalencePeriodInDays;
 	}
+	
+	
+	private void replaceImagesInBundle(Bundle theBundle, String requestId) throws Exception {
+		List<Media> media = BundleUtil.toListOfResourcesOfType(R2DAccessServer.FHIR_CONTEXT, 
+				theBundle, Media.class);
+
+		String filePrefix = Configuration.getDBPath() + requestId + "_"; 
+		String imgPlaceholder;
+		int counter = 1;
+		for(Media m : media) {
+			//imgPlaceholder = new String(m.getContent().getData());
+			replaceImage(m, new File( filePrefix + "imagePlaceholder" + counter++));
+		}		
+	}
+	
+	
+	private void replaceImage(Media media, File imageFile) throws Exception {
+		StringWriter imageData = new StringWriter();
+		try (InputStreamReader isr = new InputStreamReader(new FileInputStream(imageFile))) {
+			IOUtils.copyLarge(isr, imageData, new char[10000]);
+		}
+		
+		Base64BinaryType b64 = new Base64BinaryType();
+		b64.setValueAsString(imageData.toString());
+		media.getContent().setDataElement(b64);
+		imageData.close();
+	}
+	
 	
 	/*
 	@Override
