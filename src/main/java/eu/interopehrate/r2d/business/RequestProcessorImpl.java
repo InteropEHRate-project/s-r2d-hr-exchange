@@ -5,30 +5,32 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.Base64.Decoder;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.hl7.fhir.r4.model.Address;
-import org.hl7.fhir.r4.model.Base64BinaryType;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.DiagnosticReport;
+import org.hl7.fhir.r4.model.DiagnosticReport.DiagnosticReportMediaComponent;
+import org.hl7.fhir.r4.model.Extension;
 import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Media;
+import org.hl7.fhir.r4.model.Media.MediaStatus;
+import org.hl7.fhir.r4.model.Meta;
 import org.hl7.fhir.r4.model.Organization;
+import org.hl7.fhir.r4.model.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.util.BundleUtil;
 import eu.interopehrate.fhir.provenance.BundleProvenanceBuilder;
@@ -49,6 +51,13 @@ import eu.interopehrate.r2d.utils.URLUtility;
 public class RequestProcessorImpl implements RequestProcessor {
 	private static final String MAX_CONCURRENT_REQUEST_PROPERTY =  "r2da.maxConcurrentRunningRequestPerDay";
 	private static final String EQUIVALENCE_PERIOD_PROPERTY =  "r2da.equivalencePeriodInDays";
+	
+	private static final String PROVIDER_ID =  "provenance.provider.identifier";
+	private static final String PROVIDER_NAME =  "provenance.provider.name";
+	private static final String PROVIDER_ADDRESS =  "provenance.provider.address";
+	private static final String PROVIDER_CITY =  "provenance.provider.city";
+	private static final String PROVIDER_STATE =  "provenance.provider.state";
+	private static final String PROVIDER_POSTAL_CODE =  "provenance.provider.postalcode";
 
 	private final Logger logger = LoggerFactory.getLogger(RequestProcessorImpl.class);
 	private int maxConcurrentRequest;
@@ -63,15 +72,20 @@ public class RequestProcessorImpl implements RequestProcessor {
 	@Autowired(required = true)
 	private RequestRepository requestRepository;
 	
-	private BundleProvenanceBuilder provenanceBuilder;
-	
+	private String storagePath;
+	private Organization defaultProviderOrg;
 	
 	public RequestProcessorImpl() {
+		// Retrieves the storage path from the configuration file
+		storagePath = Configuration.getDBPath();
+		if (!storagePath.endsWith("/"))
+			storagePath += "/";
+
 		try {
-		// Retrieves MAX_CONCURRENT_REQUEST from properties file
-		maxConcurrentRequest = Integer.parseInt(Configuration.getProperty(MAX_CONCURRENT_REQUEST_PROPERTY));
-		// Retrieves CACHE_DURATION_IN_DAYS from properties file
-		equivalencePeriodInDays = Integer.parseInt(Configuration.getProperty(EQUIVALENCE_PERIOD_PROPERTY));
+			// Retrieves MAX_CONCURRENT_REQUEST from properties file
+			maxConcurrentRequest = Integer.parseInt(Configuration.getProperty(MAX_CONCURRENT_REQUEST_PROPERTY));
+			// Retrieves CACHE_DURATION_IN_DAYS from properties file
+			equivalencePeriodInDays = Integer.parseInt(Configuration.getProperty(EQUIVALENCE_PERIOD_PROPERTY));
 		} catch (Exception e) {
 			logger.error("Please check these properties in the configuration file {} {}", 
 					MAX_CONCURRENT_REQUEST_PROPERTY, EQUIVALENCE_PERIOD_PROPERTY);
@@ -80,20 +94,20 @@ public class RequestProcessorImpl implements RequestProcessor {
 		
     	// Creates the instance of BundleProvenanceBuilder to add 
 		// Provenance info to bundles produced by EHR-MW
-		Organization providerOrg = new Organization();
-		providerOrg.setId("1");
-        Identifier id = new Identifier();
-        id.setValue(Configuration.getProperty("provenance.provider.identifier"));
-        providerOrg.addIdentifier(id);
-        providerOrg.setActive(true);
-        providerOrg.setName(Configuration.getProperty("provenance.provider.name"));
-        providerOrg.addAddress().addLine(Configuration.getProperty("provenance.provider.address"))
-        .setCity(Configuration.getProperty("provenance.provider.city"))
-        .setState(Configuration.getProperty("provenance.provider.state"))
-        .setPostalCode(Configuration.getProperty("provenance.provider.postalcode"))
+		defaultProviderOrg = new Organization();
+		String id = Configuration.getProperty(PROVIDER_ID);
+		defaultProviderOrg.setId(id);
+        Identifier idf = new Identifier();
+        idf.setValue(id);
+        defaultProviderOrg.addIdentifier(idf);
+        defaultProviderOrg.setActive(true);
+        defaultProviderOrg.setName(Configuration.getProperty(PROVIDER_NAME));
+        defaultProviderOrg.addAddress().addLine(Configuration.getProperty(PROVIDER_ADDRESS))
+        .setCity(Configuration.getProperty(PROVIDER_CITY))
+        .setState(Configuration.getProperty(PROVIDER_STATE))
+        .setPostalCode(Configuration.getProperty(PROVIDER_POSTAL_CODE))
         .setUse(Address.AddressUse.WORK);
-    	provenanceBuilder = new BundleProvenanceBuilder(providerOrg);
-	}
+   	}
 
 
 	@Override
@@ -185,13 +199,13 @@ public class RequestProcessorImpl implements RequestProcessor {
 	
 	@Override
 	public void requestCompletedSuccesfully(final String requestId) throws R2DException {
-		// checks request if present
+		// #1 checks if request exists
 		Optional<R2DRequest> optional = requestRepository.findById(requestId);
 		if (!optional.isPresent())
 			throw new R2DException(
 					R2DException.REQUEST_NOT_FOUND, String.format("Request with id % not found.", requestId));
 
-		// checks request status
+		// #1.1 checks request status
 		R2DRequest theR2DRequest = optional.get();
 		if (theR2DRequest.getStatus() != RequestStatus.RUNNING &&
 			theR2DRequest.getStatus() != RequestStatus.PARTIALLY_COMPLETED) {
@@ -201,36 +215,38 @@ public class RequestProcessorImpl implements RequestProcessor {
 							theR2DRequest.getStatus(), requestId));
 		}
 		
+		// #2 starts request processing
 		Bundle theBundle = null;
 		String phase = "parsing received JSON";
 		try {
-			// #2.1 Parse results produced by IHS
 			final IParser parser = R2DAccessServer.FHIR_CONTEXT.newJsonParser();
-			// creates the name of the file that store the results
-			final String ihsFhirFileName = Configuration.getDBPath() + requestId +  ".json";
-			try (InputStream ihsFhirFile = new FileInputStream(new File(ihsFhirFileName))) {
-				theBundle = (Bundle) parser.parseResource(ihsFhirFile);
-				if (logger.isDebugEnabled())
-					logger.debug("Response contains a valid FHIR Bundle with {} entries", 
-							theBundle.getEntry().size());
-			} catch (DataFormatException dfe) {
-				logger.error("Response contains a not valid FHIR Bundle: {}", dfe.getMessage());
-				throw dfe;
-			}
+			// #2.0 creates the name of the file that store the results
+			final String ihsFhirFileName =  storagePath + requestId +  ".json";
+			
+			// #2.1 Parse results produced by IHS
+			if (logger.isDebugEnabled())
+				logger.debug("Parsing received JSON...");
+			theBundle = parseReceivedBundle(new File(ihsFhirFileName), parser);		
 			
 			// #2.2 Adds the images that have been removed by the EHRMW
 			phase = "adding removed images";
-			replaceImagesInBundle(theBundle, requestId);
 			if (logger.isDebugEnabled())
-				logger.debug("Added removed images to the bundle");
+				logger.debug("Restoring removed images into the bundle...");
+			restoreImagesInBundle(theBundle, requestId, storagePath);
 			
 			// #2.3 Adds the Provenance information to the resources in the bundle
 			phase = "creating provenance info";
+			Organization org = getOrganizationFromBundle(theBundle);
+			final BundleProvenanceBuilder provenanceBuilder = new BundleProvenanceBuilder(org);
+			if (logger.isDebugEnabled())
+				logger.debug("Adding Provenance info to the Bundle...");
 			provenanceBuilder.addProvenanceToBundleItems(theBundle);
 			if (logger.isDebugEnabled())
 				logger.debug("Added Provenance info to the Bundle, now contains {} entries", theBundle.getEntry().size());
 
 			// #2.4 Writes signed Bundle to file
+			if (logger.isDebugEnabled())
+				logger.debug("Saving complete bundle to file...");
 			try(Writer writer = new BufferedWriter(new FileWriter(ihsFhirFileName, false))) {
 				parser.setPrettyPrint(true);
 				parser.encodeResourceToWriter(theBundle, writer);				
@@ -250,11 +266,11 @@ public class RequestProcessorImpl implements RequestProcessor {
 			logger.info(String.format("Response of request %s succesfully saved to database. Execution completed!", requestId));
 			theBundle = null;
 		} catch (Exception e) {
+			logger.error("Error!", e);
 			String msg = e.getMessage();
 			if (msg.length() > 250)
 				msg = msg.substring(0, 250);
 			logger.error(String.format("Error while %s: %s ", phase, msg));
-			logger.error(e.getMessage(), e);
 			// update request status
 			theR2DRequest.setStatus(RequestStatus.FAILED);
 			theR2DRequest.setFailureMessage(msg);
@@ -313,32 +329,163 @@ public class RequestProcessorImpl implements RequestProcessor {
 	}
 	
 	
-	private void replaceImagesInBundle(Bundle theBundle, String requestId) throws Exception {
-		List<Media> media = BundleUtil.toListOfResourcesOfType(R2DAccessServer.FHIR_CONTEXT, 
-				theBundle, Media.class);
-
-		String filePrefix = Configuration.getDBPath() + requestId + "_"; 
-		String imgPlaceholder;
-		int counter = 1;
-		for(Media m : media) {
-			//imgPlaceholder = new String(m.getContent().getData());
-			replaceImage(m, new File( filePrefix + "imagePlaceholder" + counter++));
+	public Organization getOrganizationFromBundle(Bundle theBundle) {
+		List<Organization> orgs = BundleUtil.toListOfResourcesOfType(R2DAccessServer.FHIR_CONTEXT, 
+				theBundle, Organization.class);
+		
+		String orgId = Configuration.getProperty(PROVIDER_ID);
+		
+		// looks for the provider organization into the received bundle...
+		for (Organization org : orgs) {
+			if (org.getIdElement().getIdPart().equals(orgId)) {
+				org.setActive(true);
+				org.setName(Configuration.getProperty(PROVIDER_NAME));
+				org.addAddress().addLine(Configuration.getProperty(PROVIDER_ADDRESS))
+		        .setCity(Configuration.getProperty(PROVIDER_CITY))
+		        .setState(Configuration.getProperty(PROVIDER_STATE))
+		        .setPostalCode(Configuration.getProperty(PROVIDER_POSTAL_CODE))
+		        .setUse(Address.AddressUse.WORK);
+				return org;
+			}
+		}
+		
+		// if not found, returns default provider org
+		return this.defaultProviderOrg;
+	}
+	
+	
+	private Bundle parseReceivedBundle(File inputFHIRFile, IParser parser) throws Exception {
+		try (InputStream ihsFhirFile = new FileInputStream(inputFHIRFile)) {
+			Bundle theBundle = (Bundle) parser.parseResource(ihsFhirFile);
+			if (logger.isDebugEnabled())
+				logger.debug("Response contains a valid FHIR Bundle with {} entries", 
+						theBundle.getEntry().size());
+			
+			return theBundle;
+		} catch (Exception | Error e) {
+			logger.error("Unable to parse the received FHIR bundle: {}", e.getMessage());
+			throw e;
 		}		
 	}
 	
 	
-	private void replaceImage(Media media, File imageFile) throws Exception {
-		StringWriter imageData = new StringWriter();
-		try (InputStreamReader isr = new InputStreamReader(new FileInputStream(imageFile))) {
-			IOUtils.copyLarge(isr, imageData, new char[10000]);
+	private void restoreImagesInBundle(Bundle theBundle, String requestId, String storagePath) throws Exception {
+		List<DiagnosticReport> allReports = BundleUtil.toListOfResourcesOfType(R2DAccessServer.FHIR_CONTEXT, 
+				theBundle, DiagnosticReport.class);
+
+		List<Media> allMedia = BundleUtil.toListOfResourcesOfType(R2DAccessServer.FHIR_CONTEXT, 
+				theBundle, Media.class);
+
+		if (logger.isDebugEnabled())
+			logger.debug("Found {} Media in bundle ", allMedia.size());
+
+		String filePrefix = storagePath + requestId; 
+		String imgPlaceholder;
+		DiagnosticReport parent;
+		// starts looping
+		for(Media media : allMedia) {
+			if (logger.isDebugEnabled())
+				logger.debug("Processing Media {} ", media.getId());
+			
+			if (media.getContent() == null) {
+				logger.warn("Unable to restore image from Media {}, attachment is null.", 
+						media.getIdElement().getIdPart());
+				continue;
+			}
+			
+			if (media.getContent().getData() == null) {
+				logger.warn("Unable to restore image from Media {}, data of attachment is null.",
+						media.getIdElement().getIdPart());
+				continue;
+			}
+			
+			// retrieve placeholde from current Media content
+			// the placeholder is used to determine what image 
+			// must be added to the Media
+			imgPlaceholder = new String(media.getContent().getData());
+			if (logger.isDebugEnabled())
+				logger.debug("Found placeholder: {} in Media {}", imgPlaceholder, media.getId());
+			
+			// image file = [requestId]_imagePlaceholder[id]
+			File clearImage = new File(filePrefix + imgPlaceholder);			
+			// Copy original image to Media
+			if (logger.isDebugEnabled())
+				logger.debug("Restoring: original version of {}...", media.getId());
+			copyImageFromFileToMedia(media, clearImage);
+
+			// anon image file = [requestId]_imagePlaceholder[id]_anon
+			File anonymizedImage = new File(filePrefix + imgPlaceholder + "_anon");
+			if (anonymizedImage.exists()) {
+				parent = getParentReport(allReports, media);
+				if (parent == null) {
+					logger.warn(
+					"No containing DiagnosticReport found for {}, anonymized image not added.",
+					media.getId());
+					continue;
+				}
+				// Creates anonymized Media and adds it to the bundle
+				logger.debug("Adding anonymized version of {}...", media.getId());
+				addAnonymizedImageToBundle(theBundle, media, anonymizedImage, parent);
+			} else
+				logger.warn("No anonymized version of {}!", media.getId());
+		}
+	}
+	
+	
+	private void addAnonymizedImageToBundle(Bundle theBundle, Media clearMedia, 
+			File anonymizedImage, DiagnosticReport parent) throws Exception {
+		// creates the anonymized Media instance
+		Media anonymizedMedia = new Media();
+        Meta meta = new Meta();
+        meta.addProfile("http://interopehrate.eu/fhir/StructureDefinition/Media-IEHR");
+        anonymizedMedia.setMeta(meta);
+		anonymizedMedia.setId(clearMedia.getIdElement().getIdPart() + "_anonymized");
+		anonymizedMedia.setStatus(MediaStatus.COMPLETED);
+		anonymizedMedia.setSubject(clearMedia.getSubject());
+		anonymizedMedia.setOperator(clearMedia.getOperator());
+		anonymizedMedia.setEncounter(clearMedia.getEncounter());
+		// adds extension for anonymization
+		Extension ext = new Extension(
+				"http://interopehrate.eu/fhir/StructureDefinition/AnonymizationExtension-IEHR");
+		ext.setValue(new Coding("http://interopehrate.eu/fhir/CodeSystem/AnonymizationType-IEHR",
+				"anonymization", "Anonymization"));
+		anonymizedMedia.addExtension(ext);
+		
+		// copy data from the anonymized file to the Media
+		copyImageFromFileToMedia(anonymizedMedia, anonymizedImage);
+		//adds the anonymized Media to the Diagnostic Report
+		parent.addMedia().setLink(new Reference(anonymizedMedia));
+		// adds the Media to the Bundle
+		theBundle.addEntry().setResource(anonymizedMedia);
+	}
+	
+	
+	private void copyImageFromFileToMedia(Media media, File imageFile) throws Exception {
+		ByteArrayOutputStream imageData = new ByteArrayOutputStream();
+		try (InputStream is = new FileInputStream(imageFile)) {
+			IOUtils.copyLarge(is, imageData, new byte[1024]);
 		}
 		
-		Base64BinaryType b64 = new Base64BinaryType();
-		b64.setValueAsString(imageData.toString());
-		media.getContent().setDataElement(b64);
+		media.getContent().setData(imageData.toByteArray());
+		media.getContent().setSize(imageData.size());
 		imageData.close();
 	}
 	
+	
+	private DiagnosticReport getParentReport(List<DiagnosticReport> reports, Media media) {
+		final String mediaId = media.getId();
+		String currentMediaId;
+		
+		for (DiagnosticReport report : reports) {
+			for (DiagnosticReportMediaComponent mc : report.getMedia()) {
+				currentMediaId = ((Media)mc.getLink().getResource()).getId();
+				if (mediaId.equals(currentMediaId)) 
+					return report;
+			}
+		}
+		
+		return null;
+	}
 	
 	/*
 	@Override

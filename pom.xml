@@ -149,7 +149,7 @@
 		<dependency>
 		  <groupId>eu.interopehrate</groupId>
 		  <artifactId>iehr-provenance</artifactId>
-		  <version>0.0.2</version>
+		  <version>0.0.3</version>
 		  <exclusions>
 		        <exclusion> 
 		          <groupId>org.slf4j</groupId>
@@ -296,10 +296,10 @@
 
                                     	<!-- logback.xml file -->
                                         <delete file="${project.build.outputDirectory}/logback.xml"/>
-                                        <copy file="src/main/resources/logback.ftgm.xml"
+                                        <copy file="src/main/resources/logback.docker.xml"
                                               tofile="${project.build.outputDirectory}/logback.xml"/>
                                         <delete file="${project.build.outputDirectory}/logback.test.xml"/>                                       
-                                        <delete file="${project.build.outputDirectory}/logback.ftgm.xml"/>                                       
+                                        <delete file="${project.build.outputDirectory}/logback.docker.xml"/>                                       
                                     </target>
                                 </configuration>
                             </execution>
@@ -356,7 +356,7 @@
                                         <copy file="src/main/resources/logback.test.xml"
                                               tofile="${project.build.outputDirectory}/logback.xml"/>
                                         <delete file="${project.build.outputDirectory}/logback.test.xml"/>                                       
-                                        <delete file="${project.build.outputDirectory}/logback.ftgm.xml"/>                                       
+                                        <delete file="${project.build.outputDirectory}/logback.docker.xml"/>                                       
                                     </target>
                                 </configuration>
                             </execution>

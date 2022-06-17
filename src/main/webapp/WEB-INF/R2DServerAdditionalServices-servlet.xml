@@ -64,7 +64,7 @@
 
 	<!--  Every minute = 0 * * ? * *, Every Hour = 0 0 * ? * * -->
 	<task:scheduled-tasks scheduler="scheduler">
-	    <task:scheduled ref="databaseCleaner" method="deleteExpiredFiles" cron="0 0 * ? * *" />
+	    <task:scheduled ref="databaseCleaner" method="deleteExpiredFiles" cron="0 * * ? * *" />
 	</task:scheduled-tasks>
 
 	<!-- Activates scanning of @Repository classes -->

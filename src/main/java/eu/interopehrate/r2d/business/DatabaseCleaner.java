@@ -47,7 +47,7 @@ public class DatabaseCleaner {
 	class ExpiredFileFilter implements FileFilter {
 		@Override
 		public boolean accept(File pathname) {
-			if (pathname.isFile() && pathname.getName().endsWith(".json"))
+			if (pathname.isFile())
 				return true;
 			
 			return false;

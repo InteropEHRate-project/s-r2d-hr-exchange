@@ -32,12 +32,6 @@ public class RestAdminController {
 	@Autowired(required = true)
 	private RequestRepository requestRepository;
 
-	@GetMapping(path="/ping", produces = "application/json")
-	public String ping() {
-		return String.format("R2DAccess Service version '%s' is up and running!",
-				Configuration.getProperty("r2da.version"));
-	}
-
 	
 	@GetMapping(path="/config", produces = "application/json")
 	public String config() {

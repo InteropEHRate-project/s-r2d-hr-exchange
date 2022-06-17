@@ -99,7 +99,7 @@ public class AuthenticatorFilter implements Filter {
 		if (requestURI.equals(homeURI) || requestURI.equals(homeURI + "/")) {
 			hRes.getWriter().format("R2DAccess Server version '%s' installed @%s is alive and kicking!", 
 					Configuration.getProperty("r2da.version"),
-					Configuration.getProperty("provenance.provider.identifier"));
+					Configuration.getProperty("provenance.provider.name"));
 			return;
 		}
 				
