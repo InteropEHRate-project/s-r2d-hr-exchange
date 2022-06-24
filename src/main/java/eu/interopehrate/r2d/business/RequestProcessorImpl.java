@@ -4,10 +4,15 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -266,11 +271,12 @@ public class RequestProcessorImpl implements RequestProcessor {
 			logger.info(String.format("Response of request %s succesfully saved to database. Execution completed!", requestId));
 			theBundle = null;
 		} catch (Exception e) {
-			logger.error("Error!", e);
+			logger.error("Error during execution of: " + phase, e);
 			String msg = e.getMessage();
 			if (msg.length() > 250)
 				msg = msg.substring(0, 250);
-			logger.error(String.format("Error while %s: %s ", phase, msg));
+			// logger.error(String.format("Error while %s: %s ", phase, msg));
+			logger.error(String.format("Error while %s: %s ", phase, e.getClass().getName()));
 			// update request status
 			theR2DRequest.setStatus(RequestStatus.FAILED);
 			theR2DRequest.setFailureMessage(msg);
@@ -298,6 +304,27 @@ public class RequestProcessorImpl implements RequestProcessor {
 						String.format("Current status (%s) of request with id % does not allow to elaborate it.", 
 								theR2DRequest.getStatus(), requestId));
 		}		
+		
+		// clear tmp files
+		if (logger.isDebugEnabled())
+			logger.debug("Deleting temporary files for image anonymization....");
+
+		Path filePath = Paths.get(Configuration.getDBPath());
+		final String fileNamePattern = requestId + "_imagePlaceholder";
+		try {
+			Files.walk(filePath)
+			.filter(Files::isRegularFile)
+			.filter(tmpFile -> tmpFile.getName(tmpFile.getNameCount() - 1).toString().startsWith(fileNamePattern))
+			.forEach(tmpFile -> {
+				try {
+					Files.deleteIfExists(tmpFile);
+				} catch (Exception ioe) {
+					logger.warn("Not able to delete tmp file {}", tmpFile.toString());
+				}
+			});
+		} catch (IOException e) {
+			logger.warn("Not able to delete tmp files for request {}", requestId);
+		}
 		
 		// update request status
 		theR2DRequest.setStatus(RequestStatus.FAILED);
@@ -377,11 +404,12 @@ public class RequestProcessorImpl implements RequestProcessor {
 				theBundle, Media.class);
 
 		if (logger.isDebugEnabled())
-			logger.debug("Found {} Media in bundle ", allMedia.size());
+			logger.debug("Found {} Media in bundle to be restored...", allMedia.size());
 
 		String filePrefix = storagePath + requestId; 
 		String imgPlaceholder;
 		DiagnosticReport parent;
+		List<File> filesToDelete = new ArrayList<File>();
 		// starts looping
 		for(Media media : allMedia) {
 			if (logger.isDebugEnabled())
@@ -407,7 +435,8 @@ public class RequestProcessorImpl implements RequestProcessor {
 				logger.debug("Found placeholder: {} in Media {}", imgPlaceholder, media.getId());
 			
 			// image file = [requestId]_imagePlaceholder[id]
-			File clearImage = new File(filePrefix + imgPlaceholder);			
+			File clearImage = new File(filePrefix + imgPlaceholder);
+			filesToDelete.add(clearImage);
 			// Copy original image to Media
 			if (logger.isDebugEnabled())
 				logger.debug("Restoring: original version of {}...", media.getId());
@@ -416,6 +445,7 @@ public class RequestProcessorImpl implements RequestProcessor {
 			// anon image file = [requestId]_imagePlaceholder[id]_anon
 			File anonymizedImage = new File(filePrefix + imgPlaceholder + "_anon");
 			if (anonymizedImage.exists()) {
+				filesToDelete.add(anonymizedImage);
 				parent = getParentReport(allReports, media);
 				if (parent == null) {
 					logger.warn(
@@ -426,9 +456,18 @@ public class RequestProcessorImpl implements RequestProcessor {
 				// Creates anonymized Media and adds it to the bundle
 				logger.debug("Adding anonymized version of {}...", media.getId());
 				addAnonymizedImageToBundle(theBundle, media, anonymizedImage, parent);
+				// only for load test
+				// addAnonymizedImageToBundleForLoadTest(theBundle, media, anonymizedImage, parent);
 			} else
-				logger.warn("No anonymized version of {}!", media.getId());
+				logger.warn("No anonymized version of {}", media.getId());
 		}
+		
+		// deletes all no more needed images
+		logger.debug("Deleting {} temporary image files...", filesToDelete.size());
+		for (File filetoDelete : filesToDelete) {
+			Files.deleteIfExists(filetoDelete.toPath());
+		}
+			
 	}
 	
 	
@@ -459,6 +498,38 @@ public class RequestProcessorImpl implements RequestProcessor {
 		theBundle.addEntry().setResource(anonymizedMedia);
 	}
 	
+	private void addAnonymizedImageToBundleForLoadTest(Bundle theBundle, Media clearMedia, 
+			File anonymizedImage, DiagnosticReport parent) throws Exception {
+		
+		int maxLoad = Integer.parseInt(Configuration.getProperty("r2d.DuplicatedImagesSize"));
+		
+		Media duplicatededMedia = new Media();
+        Meta meta = new Meta();
+		for (int i = 0; i < maxLoad ; i++) {
+			// creates the anonymized Media instance
+	        meta.addProfile("http://interopehrate.eu/fhir/StructureDefinition/Media-IEHR");
+	        duplicatededMedia.setMeta(meta);
+			duplicatededMedia.setId(clearMedia.getIdElement().getIdPart() + "_anonymized_" + (i + 2));
+			duplicatededMedia.setStatus(MediaStatus.COMPLETED);
+			duplicatededMedia.setSubject(clearMedia.getSubject());
+			duplicatededMedia.setOperator(clearMedia.getOperator());
+			duplicatededMedia.setEncounter(clearMedia.getEncounter());
+			// adds extension for anonymization
+			Extension ext = new Extension(
+					"http://interopehrate.eu/fhir/StructureDefinition/AnonymizationExtension-IEHR");
+			ext.setValue(new Coding("http://interopehrate.eu/fhir/CodeSystem/AnonymizationType-IEHR",
+					"anonymization", "Anonymization"));
+			duplicatededMedia.addExtension(ext);
+			
+			// copy data from the anonymized file to the Media
+			copyImageFromFileToMedia(duplicatededMedia, anonymizedImage);
+			//adds the anonymized Media to the Diagnostic Report
+			parent.addMedia().setLink(new Reference(duplicatededMedia));
+			// adds the Media to the Bundle
+			logger.debug("...Duplicating image {}", duplicatededMedia.getIdElement().getIdPart());
+			theBundle.addEntry().setResource(duplicatededMedia);
+		}
+	}
 	
 	private void copyImageFromFileToMedia(Media media, File imageFile) throws Exception {
 		ByteArrayOutputStream imageData = new ByteArrayOutputStream();

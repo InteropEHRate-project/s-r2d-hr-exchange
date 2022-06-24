@@ -119,7 +119,6 @@ public class R2DAccessServer extends RestfulServer {
 		 */
 		// setDefaultPrettyPrint(true);
 		
-		
 		/*
 		 * Executes initialization of ResourceSigner
 		 */
