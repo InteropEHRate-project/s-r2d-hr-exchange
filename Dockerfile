@@ -11,33 +11,31 @@
 #
 FROM tomcat:9.0.60-jre8-openjdk
 
-#LABEL version="0.9.Test"
-
 #
 # Remove Tomcat default web apps
 #
 RUN rm -rf /usr/local/tomcat/webapps/*
 
 #
-# Copy the customised server.xml to Tomcat conf folder
-#
-COPY ./tomcat/server.xml /usr/local/tomcat/conf/server.xml
-COPY ./tomcat/keystore.p12 /usr/local/tomcat/conf/keystore.p12
-
-#
 # Ports to expose
 #
-#EXPOSE 8443/tcp
+EXPOSE 8443/tcp
 EXPOSE 8080/tcp
+
+#
+# Copy the customised server.xml to Tomcat conf folder
+#
+#COPY ./tomcat/server_ftgm.xml /usr/local/tomcat/conf/server.xml
+COPY ./tomcat/server_chu.xml /usr/local/tomcat/conf/server.xml
 
 #
 # Copy the R2DA WAR file to be deployed as web app
 #
-#COPY ./target/r2da-chu.war /usr/local/tomcat/webapps/r2da.war
-COPY ./target/r2da-ftgm.war /usr/local/tomcat/webapps/r2da.war
+COPY ./target/r2da-chu.war /usr/local/tomcat/webapps/r2da.war
+#COPY ./target/r2da-ftgm.war /usr/local/tomcat/webapps/r2da.war
 
 #
 # Copy the EHR-MW WAR file to be deployed as web app
 #
-#COPY ./target/ehr-chu.war /usr/local/tomcat/webapps/ehr.war
-COPY ./target/ehr-ftgm.war /usr/local/tomcat/webapps/ehr.war
+COPY ./target/ehr-chu.war /usr/local/tomcat/webapps/ehr.war
+#COPY ./target/ehr-ftgm.war /usr/local/tomcat/webapps/ehr.war

@@ -102,12 +102,10 @@
            port="8443"
            maxHttpHeaderSize="65536">
         <SSLHostConfig>
-            <Certificate 
-            certificateKeystoreFile="conf/keystore.p12" 
-            certificateKeyAlias="healthorganization"
-            certificateKeystorePassword="interop" 
-            sslProtocol="TLS"
-            type="RSA" />
+        <Certificate 
+			certificateFile="/usr/local/sslcertificates/cert1.pem"
+			certificateKeyFile="/usr/local/sslcertificates/privkey1.pem"
+			certificateChainFile="/usr/local/sslcertificates/chain1.pem" />
         </SSLHostConfig>
      </Connector>
     

@@ -440,7 +440,7 @@ public class RequestProcessorImpl implements RequestProcessor {
 			// Copy original image to Media
 			if (logger.isDebugEnabled())
 				logger.debug("Restoring: original version of {}...", media.getId());
-			copyImageFromFileToMedia(media, clearImage);
+			copyImageFromFileToMedia(media, clearImage, null);
 
 			// anon image file = [requestId]_imagePlaceholder[id]_anon
 			File anonymizedImage = new File(filePrefix + imgPlaceholder + "_anon");
@@ -491,7 +491,8 @@ public class RequestProcessorImpl implements RequestProcessor {
 		anonymizedMedia.addExtension(ext);
 		
 		// copy data from the anonymized file to the Media
-		copyImageFromFileToMedia(anonymizedMedia, anonymizedImage);
+		copyImageFromFileToMedia(anonymizedMedia, anonymizedImage, 
+				clearMedia.getContent().getContentType());
 		//adds the anonymized Media to the Diagnostic Report
 		parent.addMedia().setLink(new Reference(anonymizedMedia));
 		// adds the Media to the Bundle
@@ -522,7 +523,8 @@ public class RequestProcessorImpl implements RequestProcessor {
 			duplicatededMedia.addExtension(ext);
 			
 			// copy data from the anonymized file to the Media
-			copyImageFromFileToMedia(duplicatededMedia, anonymizedImage);
+			copyImageFromFileToMedia(duplicatededMedia, anonymizedImage, 
+					clearMedia.getContent().getContentType());
 			//adds the anonymized Media to the Diagnostic Report
 			parent.addMedia().setLink(new Reference(duplicatededMedia));
 			// adds the Media to the Bundle
@@ -531,12 +533,13 @@ public class RequestProcessorImpl implements RequestProcessor {
 		}
 	}
 	
-	private void copyImageFromFileToMedia(Media media, File imageFile) throws Exception {
+	private void copyImageFromFileToMedia(Media media, File imageFile, String contentType) throws Exception {
 		ByteArrayOutputStream imageData = new ByteArrayOutputStream();
 		try (InputStream is = new FileInputStream(imageFile)) {
 			IOUtils.copyLarge(is, imageData, new byte[1024]);
 		}
-		
+		if (contentType != null && !contentType.isEmpty())
+			media.getContent().setContentType(contentType);
 		media.getContent().setData(imageData.toByteArray());
 		media.getContent().setSize(imageData.size());
 		imageData.close();
@@ -558,58 +561,5 @@ public class RequestProcessorImpl implements RequestProcessor {
 		return null;
 	}
 	
-	/*
-	@Override
-	public void requestProducedPartialResult(String requestId, String jsonBundle) throws R2DException {
-		Optional<R2DRequest> optional = requestRepository.findById(requestId);
-		
-		if (!optional.isPresent())
-			throw new R2DException(
-					R2DException.REQUEST_NOT_FOUND, String.format("Request with id % not found.", requestId));
-		
-		// checks request status
-		R2DRequest theR2DRequest = optional.get();
-		if (theR2DRequest.getStatus() != RequestStatus.RUNNING &&
-			theR2DRequest.getStatus() != RequestStatus.PARTIALLY_COMPLETED) {
-			throw new R2DException(
-					R2DException.INVALID_STATE, 
-					String.format("Current status (%s) of request with id % does not allow to elaborate it.", 
-							theR2DRequest.getStatus(), requestId));
-		}
-			
-		// #2.1 Parse results to verifies the bundle
-		Bundle theBundle = null;
-		try {
-			IParser parser = R2DAccessServer.FHIR_CONTEXT.newJsonParser();
-			theBundle = parser.parseResource(Bundle.class, jsonBundle);
-			if (logger.isDebugEnabled())
-				logger.debug(String.format("Response contains a valid Bundle with %d entries: ", theBundle.getEntry().size()));
-			// TODO: adds the signature of the resources
-			
-			// #2.2 Store response to the DB
-			R2DResponse response = new R2DResponse();
-			response.setResponse(jsonBundle);
-			response.setCitizenId(theR2DRequest.getCitizenId());
-			responseRepository.save(response);
-
-			// #2.3 Update status of the request to the DB
-			theR2DRequest.setStatus(RequestStatus.PARTIALLY_COMPLETED);
-			theR2DRequest.addResponseId(response.getId());
-			requestRepository.save(theR2DRequest);			
-			if (logger.isDebugEnabled())
-				logger.debug(String.format("Partial result of request %s succesfully stored!", requestId));
-
-		} catch (Exception e) {
-			logger.error(String.format("Error while parsing the received bundle: %s ", e.getMessage()));
-			logger.error(e.getMessage(), e);
-			// update request status
-			theR2DRequest.setStatus(RequestStatus.FAILED);
-			String failureMsg = "The received bundle is not valid: " + e.getMessage();
-			theR2DRequest.setFailureMessage(failureMsg);
-			requestRepository.save(theR2DRequest);
-
-		}
-	}
-	*/
 
 }
