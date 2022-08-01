@@ -45,7 +45,7 @@ public class RestAdminController {
 	public String config() {
 		
 		return String.format("R2DAccess Service version: '%s'\n"
-				+ "Deployed by: %s - %s\nConfiguration:\n"
+				+ "Deployed by: %s \nConfiguration:\n"
 				+ "\tEHRMW endpoint: '%s'\n"
 				+ "\tStorage Path: '%s'\n"
 				+ "\tMaxRunningRequest: %s\n"
