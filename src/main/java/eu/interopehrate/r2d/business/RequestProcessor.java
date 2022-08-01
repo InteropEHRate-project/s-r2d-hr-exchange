@@ -3,6 +3,18 @@ package eu.interopehrate.r2d.business;
 import eu.interopehrate.r2d.exceptions.R2DException;
 import eu.interopehrate.r2d.model.R2DRequest;
 
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: class that handles all the fundamental steps of the 
+ * processing of a request: creation, start, end with success, end with
+ * failure. 
+ * 
+ * Methods of this class are invoked by the FHIR Provider classes, and by
+ * the REST services of the R2DA server that receives callback from the 
+ * EHR-Middleware.
+ */
 public interface RequestProcessor {
 
 	/**

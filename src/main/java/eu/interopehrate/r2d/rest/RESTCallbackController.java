@@ -17,6 +17,14 @@ import org.springframework.web.bind.annotation.RestController;
 import eu.interopehrate.r2d.business.RequestProcessor;
 import eu.interopehrate.r2d.exceptions.R2DException;
 
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: REST methods to be invoked by the EHR-Middleware to notify the
+ * R2D Server about the completion of a request processing.
+ */
+
 @RestController
 @RequestMapping("/callbacks")
 public class RESTCallbackController {

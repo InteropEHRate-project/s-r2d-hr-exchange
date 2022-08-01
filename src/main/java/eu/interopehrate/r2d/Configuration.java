@@ -4,6 +4,12 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Properties;
 
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: Configuration class that wraps the "application.properties" file
+ */
 public final class Configuration {
 
 	public static final String R2DA_ENDPOINT = "r2da.endpoint";

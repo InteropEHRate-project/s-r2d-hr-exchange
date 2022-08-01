@@ -12,6 +12,14 @@ import javax.persistence.TemporalType;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: persistent class representing a response to a request
+ * made by a citizen.
+ */
+
 @Entity
 @Table(name = "TBL_R2D_RESPONSE")
 public class R2DResponse {

@@ -1,5 +1,11 @@
 package eu.interopehrate.r2d.exceptions;
 
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: Generic exception sent to clients.
+ */
 public class R2DException extends Exception {
 
 	private static final long serialVersionUID = 7064164021613625133L;

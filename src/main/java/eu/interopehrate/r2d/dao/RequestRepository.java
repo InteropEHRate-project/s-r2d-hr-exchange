@@ -11,6 +11,12 @@ import org.springframework.stereotype.Repository;
 
 import eu.interopehrate.r2d.model.R2DRequest;
 
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: provides method for managing R2DRequest objects from the database.
+ */
 @Repository
 public interface RequestRepository extends CrudRepository<R2DRequest, String>{
 	

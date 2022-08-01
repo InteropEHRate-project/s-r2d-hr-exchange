@@ -18,6 +18,12 @@ import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Procedure;
 
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: declares the list of resource type managed by the R2DAccessServer
+ */
 public class R2DATypes {
 	
 	private static final List<String> r2daTypes = new ArrayList<String>();

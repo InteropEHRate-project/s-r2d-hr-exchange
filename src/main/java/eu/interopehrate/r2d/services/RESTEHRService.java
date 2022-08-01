@@ -15,13 +15,15 @@ import eu.interopehrate.r2d.exceptions.R2DException;
 import eu.interopehrate.r2d.model.R2DRequest;
 import eu.interopehrate.r2d.security.SecurityConstants;
 
+
 /**
- * 
- * Sends a request to the EHR using REST 
- * 
- * @author alessiograziani
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
  *
+ * Description: Default implementation of the proxy class for requesting
+ * service to the EHR middleware.
  */
+
 @Component
 public class RESTEHRService implements EHRService {
 	

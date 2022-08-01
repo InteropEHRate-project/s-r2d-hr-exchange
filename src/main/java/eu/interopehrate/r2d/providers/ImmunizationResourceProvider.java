@@ -15,6 +15,13 @@ import ca.uhn.fhir.rest.param.DateParam;
 import ca.uhn.fhir.rest.server.exceptions.NotImplementedOperationException;
 import eu.interopehrate.r2d.exceptions.R2DException;
 
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: FHIR provider of the Immunization resource.
+ */
+
 @Service
 public class ImmunizationResourceProvider extends AbstractResourceProvider {
 

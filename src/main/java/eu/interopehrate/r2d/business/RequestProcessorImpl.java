@@ -40,7 +40,6 @@ import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.util.BundleUtil;
 import eu.interopehrate.fhir.provenance.BundleProvenanceBuilder;
 import eu.interopehrate.r2d.Configuration;
-import eu.interopehrate.r2d.MemoryLogger;
 import eu.interopehrate.r2d.R2DAccessServer;
 import eu.interopehrate.r2d.dao.RequestRepository;
 import eu.interopehrate.r2d.dao.ResponseRepository;
@@ -50,7 +49,15 @@ import eu.interopehrate.r2d.model.R2DRequest;
 import eu.interopehrate.r2d.model.R2DResponse;
 import eu.interopehrate.r2d.model.RequestStatus;
 import eu.interopehrate.r2d.services.EHRService;
+import eu.interopehrate.r2d.utils.MemoryLogger;
 import eu.interopehrate.r2d.utils.URLUtility;
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: default implementation of the RequestProcessor. 
+ * (see RequestProcessor).
+ */
 
 @Component
 public class RequestProcessorImpl implements RequestProcessor {
@@ -231,7 +238,8 @@ public class RequestProcessorImpl implements RequestProcessor {
 			// #2.1 Parse results produced by IHS
 			if (logger.isDebugEnabled())
 				logger.debug("Parsing received JSON...");
-			theBundle = parseReceivedBundle(new File(ihsFhirFileName), parser);		
+			File ihsFhirFile = new File(ihsFhirFileName);
+			theBundle = parseReceivedBundle(ihsFhirFile, parser);
 			
 			// #2.2 Adds the images that have been removed by the EHRMW
 			phase = "adding removed images";
@@ -252,6 +260,12 @@ public class RequestProcessorImpl implements RequestProcessor {
 			// #2.4 Writes signed Bundle to file
 			if (logger.isDebugEnabled())
 				logger.debug("Saving complete bundle to file...");
+			
+			// renames received IHS file
+			File renamedIHSFile = new File(ihsFhirFileName + "_ihs");
+			ihsFhirFile.renameTo(renamedIHSFile);
+			
+			// writes to file the signed Bundle
 			try(Writer writer = new BufferedWriter(new FileWriter(ihsFhirFileName, false))) {
 				parser.setPrettyPrint(true);
 				parser.encodeResourceToWriter(theBundle, writer);				
@@ -328,7 +342,13 @@ public class RequestProcessorImpl implements RequestProcessor {
 		
 		// update request status
 		theR2DRequest.setStatus(RequestStatus.FAILED);
-		theR2DRequest.setFailureMessage(failureMsg);
+		// failure msg
+		if (failureMsg != null) {
+			if (failureMsg.length() < 250)
+				theR2DRequest.setFailureMessage(failureMsg);
+			else
+				theR2DRequest.setFailureMessage(failureMsg.substring(0, 250));
+		}
 		requestRepository.save(theR2DRequest);			
 		logger.info(String.format("Request %s unsuccesfully completed the execution!", requestId));
 	}
@@ -384,6 +404,10 @@ public class RequestProcessorImpl implements RequestProcessor {
 	private Bundle parseReceivedBundle(File inputFHIRFile, IParser parser) throws Exception {
 		try (InputStream ihsFhirFile = new FileInputStream(inputFHIRFile)) {
 			Bundle theBundle = (Bundle) parser.parseResource(ihsFhirFile);
+			// this instructions forces the reconstruction of all the references in the bundle
+			// and removes all attributes that are not valid
+			theBundle = (Bundle) parser.parseResource(parser.encodeResourceToString(theBundle));
+
 			if (logger.isDebugEnabled())
 				logger.debug("Response contains a valid FHIR Bundle with {} entries", 
 						theBundle.getEntry().size());
@@ -427,7 +451,7 @@ public class RequestProcessorImpl implements RequestProcessor {
 				continue;
 			}
 			
-			// retrieve placeholde from current Media content
+			// retrieve placeholder from current Media content
 			// the placeholder is used to determine what image 
 			// must be added to the Media
 			imgPlaceholder = new String(media.getContent().getData());
@@ -435,13 +459,18 @@ public class RequestProcessorImpl implements RequestProcessor {
 				logger.debug("Found placeholder: {} in Media {}", imgPlaceholder, media.getId());
 			
 			// image file = [requestId]_imagePlaceholder[id]
-			File clearImage = new File(filePrefix + imgPlaceholder);
-			filesToDelete.add(clearImage);
-			// Copy original image to Media
-			if (logger.isDebugEnabled())
-				logger.debug("Restoring: original version of {}...", media.getId());
-			copyImageFromFileToMedia(media, clearImage, null);
-
+			File mediaFile = new File(filePrefix + imgPlaceholder);
+			if (mediaFile.exists()) {
+				filesToDelete.add(mediaFile);
+				// Copy original image to Media
+				if (logger.isDebugEnabled())
+					logger.debug("Copying media file {} to Media", mediaFile.getName());
+				copyImageFromFileToMedia(media, mediaFile, null);
+			} else {
+				media.getContent().setData(new byte[0]);
+				logger.warn("File {} not found, it was not possibile to copy the image in the Media.", mediaFile.getName());
+			}
+			
 			// anon image file = [requestId]_imagePlaceholder[id]_anon
 			File anonymizedImage = new File(filePrefix + imgPlaceholder + "_anon");
 			if (anonymizedImage.exists()) {
@@ -454,12 +483,12 @@ public class RequestProcessorImpl implements RequestProcessor {
 					continue;
 				}
 				// Creates anonymized Media and adds it to the bundle
-				logger.debug("Adding anonymized version of {}...", media.getId());
+				logger.debug("Adding anonymized version of {}", media.getId());
 				addAnonymizedImageToBundle(theBundle, media, anonymizedImage, parent);
 				// only for load test
 				// addAnonymizedImageToBundleForLoadTest(theBundle, media, anonymizedImage, parent);
 			} else
-				logger.warn("No anonymized version of {}", media.getId());
+				logger.warn("No anonymized version for Media {}", media.getId());
 		}
 		
 		// deletes all no more needed images
@@ -499,6 +528,7 @@ public class RequestProcessorImpl implements RequestProcessor {
 		theBundle.addEntry().setResource(anonymizedMedia);
 	}
 	
+	/*
 	private void addAnonymizedImageToBundleForLoadTest(Bundle theBundle, Media clearMedia, 
 			File anonymizedImage, DiagnosticReport parent) throws Exception {
 		
@@ -532,12 +562,14 @@ public class RequestProcessorImpl implements RequestProcessor {
 			theBundle.addEntry().setResource(duplicatededMedia);
 		}
 	}
+	*/
 	
 	private void copyImageFromFileToMedia(Media media, File imageFile, String contentType) throws Exception {
 		ByteArrayOutputStream imageData = new ByteArrayOutputStream();
 		try (InputStream is = new FileInputStream(imageFile)) {
 			IOUtils.copyLarge(is, imageData, new byte[1024]);
 		}
+		
 		if (contentType != null && !contentType.isEmpty())
 			media.getContent().setContentType(contentType);
 		media.getContent().setData(imageData.toByteArray());

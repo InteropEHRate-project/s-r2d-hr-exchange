@@ -1,5 +1,12 @@
 package eu.interopehrate.r2d.model;
 
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: this class represent an output produced by a R2DRequest. The
+ * URL allows a client to retrieve this result.
+ */
 public class RequestOutput {
 
 	private String type;

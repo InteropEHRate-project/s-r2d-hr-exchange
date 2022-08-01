@@ -9,12 +9,10 @@ import org.slf4j.LoggerFactory;
 import eu.interopehrate.r2d.Configuration;
 
 /**
- * 
- * This class is used to remove from the database the 
- * old responses already downloaded.
- * 
- * @author alessiograziani
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
  *
+ * Description: utility class that delete from file system expired files.
  */
 public class DatabaseCleaner {
 

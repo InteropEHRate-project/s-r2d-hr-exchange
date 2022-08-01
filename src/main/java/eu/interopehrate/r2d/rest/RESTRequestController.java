@@ -35,6 +35,13 @@ import eu.interopehrate.r2d.model.RequestOutput;
 import eu.interopehrate.r2d.model.RequestStatus;
 import eu.interopehrate.r2d.security.SecurityConstants;
 
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: provides to citizen, method for checking the status of his / her requests.
+ */
+
 @RestController
 @RequestMapping("/requests")
 public class RESTRequestController {

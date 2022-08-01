@@ -24,7 +24,7 @@
 	</servlet-mapping>
 	
    <!-- 
-		Servlet implementing R2D-EHR service implementation
+		Servlet implementing R2D Access Server implementation
 	-->	
 	<servlet>
 		<servlet-name>R2DAccessServer</servlet-name>
@@ -55,6 +55,7 @@
 		<init-param>
 			<param-name>ANONYMOUS_ALLOWED_URIS</param-name>
 			<param-value>
+			/r2da/metadata
 			</param-value> 
 		</init-param>
 		<init-param>

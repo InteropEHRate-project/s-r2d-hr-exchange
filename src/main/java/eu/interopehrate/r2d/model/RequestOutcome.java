@@ -6,6 +6,15 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: class used to send to a client the status of a request
+ * that was completed. It contains URLs to retrieve produced results, or
+ * error messages in case of failure.
+ * 
+ */
 public class RequestOutcome {
 	
 	private Date transactionTime;

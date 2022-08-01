@@ -1,5 +1,11 @@
 package eu.interopehrate.r2d.providers;
 
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: 
+ */
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ca.uhn.fhir.rest.server.IResourceProvider;

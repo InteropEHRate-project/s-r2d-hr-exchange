@@ -23,6 +23,14 @@ import eu.interopehrate.r2d.model.Citizen;
 import eu.interopehrate.r2d.model.R2DRequest;
 import eu.interopehrate.r2d.security.SecurityConstants;
 
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: Adds management of requests according to the HTTP 
+ * asynchronous pattern.
+ */
+
 @Interceptor
 public class AsyncRequestHandler {
 

@@ -35,6 +35,23 @@ import eu.interopehrate.r2d.providers.ObservationResourceProvider;
 import eu.interopehrate.r2d.providers.PatientResourceProvider;
 import eu.interopehrate.r2d.providers.ProcedureResourceProvider;
 
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: main class of the R2DAccessServer, it extends the RestfulServer
+ * defined by HAPI. 
+ * 
+ * 1) This class loads the 12 FHIR Resource Providers that compose the R2D Access Server.
+ * 
+ * 2) It loads also two Interceptors: 1) one for handling the async transaction 
+ *                                    2) one for the CapabilityStatement customizer
+ *                                 
+ * 3) at the ends load the security libraries to sign the provenances of the FHIR resources
+ * 
+ * This class is declared in the web.xml as one of the Servlet that must be loaded at start up.
+ * 
+ */
 public class R2DAccessServer extends RestfulServer {
 
 	public static FhirContext FHIR_CONTEXT;

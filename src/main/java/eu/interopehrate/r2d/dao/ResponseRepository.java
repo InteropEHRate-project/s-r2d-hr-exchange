@@ -9,6 +9,12 @@ import org.springframework.stereotype.Repository;
 
 import eu.interopehrate.r2d.model.R2DResponse;
 
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: provides method for managing R2DResponse objects from the database.
+ */
 @Repository
 public interface ResponseRepository extends CrudRepository<R2DResponse, String>{
 		

@@ -2,6 +2,13 @@ package eu.interopehrate.r2d.utils;
 
 import eu.interopehrate.r2d.R2DATypes;
 
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: utility for managing URLs
+ */
+
 public class URLUtility {
 
 	/**

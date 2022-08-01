@@ -16,6 +16,13 @@ import javax.persistence.TemporalType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: persistent class that represent a request made by a citizen.
+ */
+
 @Entity
 @Table(name = "TBL_R2D_REQUEST", indexes = @Index(columnList = "citizenId"))
 public class R2DRequest {

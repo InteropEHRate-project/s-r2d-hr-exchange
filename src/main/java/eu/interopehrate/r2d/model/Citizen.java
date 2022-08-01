@@ -1,5 +1,14 @@
 package eu.interopehrate.r2d.model;
 
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: This class represents the authenticated Citizen that 
+ * submitted a request. Instances of this class are created by the 
+ * Authenticator Filter.
+ * 
+ */
 public class Citizen {
 	private String firstName;
 	private String familyName;

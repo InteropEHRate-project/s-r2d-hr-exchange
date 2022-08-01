@@ -21,6 +21,14 @@ import eu.interopehrate.r2d.dao.RequestRepository;
 import eu.interopehrate.r2d.model.R2DRequest;
 import eu.interopehrate.r2d.model.RequestStatus;
 
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: REST methods for administrator to checj the status of the 
+ * R2D Server.
+ */
+
 @RestController
 @RequestMapping("/admin")
 public class RestAdminController {
@@ -45,7 +53,6 @@ public class RestAdminController {
 				+ "\tCurrent EquivalencePeriodInDays: %d\n"
 				+ "\tExpirationTimeInDays: %s\n",
 				Configuration.getProperty("r2da.version"),
-				Configuration.getProperty("provenance.provider.identifier"),
 				Configuration.getProperty("provenance.provider.name"),
 				Configuration.getProperty("ehr.endpoint"),
 				Configuration.getProperty("r2da.storage.path"),

@@ -18,10 +18,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.interopehrate.r2d.Configuration;
+import eu.interopehrate.r2d.exceptions.InvalidTokenException;
 import eu.interopehrate.r2d.model.Citizen;
 import eu.interopehrate.sr2dsm.SR2DSM;
 import eu.interopehrate.sr2dsm.model.ResponseDetails;
 import eu.interopehrate.sr2dsm.model.UserDetails;
+
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: This class is a J2EE Filter to handle authentication of requests.
+ * It allows only request that contains a valid EIDAS token. 
+ * 
+ * A part the validation of the EIDAS tokens, the other filtering made by this class
+ * to allow requests from the EHR-Middleware and from the system administrator ARE
+ * VALID ONLY FOR THE DEMONSTRATION OF THE RESEARCH PROJECT. 
+ * 
+ * In a real context they should enforced using certificate or other strong 
+ * authentication mechanism for the EHR-Middleware and for the system administrator.
+ * 
+ * Unfortunately EIDAS doe not have the concept of role. An EIDAS token represent
+ * a Citizen or a Legal Entity. There's no way to represent a system administrator
+ * with an EIDAS Token, so the only way to make it work properly is to add several 
+ * Authenticator Filters one for EIDAS, and the other one for another IAM 
+ * (i.e. KeyClock) where system administrators have been registered.
+ */
 
 public class AuthenticatorFilter implements Filter {
 	private static final String EHR_SERVICE_CREDENTIALS_INIT_PARAM = "EHR_SERVICE_CREDENTIALS";

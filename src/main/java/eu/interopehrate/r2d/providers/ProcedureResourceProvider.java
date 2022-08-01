@@ -16,6 +16,13 @@ import ca.uhn.fhir.rest.param.TokenParam;
 import ca.uhn.fhir.rest.server.exceptions.NotImplementedOperationException;
 import eu.interopehrate.r2d.exceptions.R2DException;
 
+/**
+ *      Author: Engineering Ingegneria Informatica
+ *     Project: InteropEHRate - www.interopehrate.eu
+ *
+ * Description: FHIR provider of the Procedure resource.
+ */
+
 @Service
 public class ProcedureResourceProvider extends AbstractResourceProvider  {
 
