@@ -1,21 +1,21 @@
 R2D-Access-server - The InteropEHRate project (www.interopEHRate.eu)
 
-This project implements the R2D Access Server a service provided by 
-an Healthcare Organization (HCO) to allow a citizen to import his / her 
-health data on the mobile phone. 
+This project implements the R2D Access Server a service provided by
+an Healthcare Organization (HCO) to allow a citizen to import his / her
+health data on the mobile phone.
 
 
 The R2D Access Server is a customization of the HAPI Plain Restful Server
-in addition to its FHIR nature, the R2D Access Server provides uses a 
+in addition to its FHIR nature, the R2D Access Server provides uses a
 personal Spring context to load classes needed for
 1) managing persistence of data
 2) managing communication with the EHR Middleware
-3) signing the Proveresources
+3) signing the Provenance resources
 
 
-The R2D Access Server provides an interface FHIR compliant, it implements 
-a small subset of the whole FHIR Restful APIs specification. This is the list 
-of the provided operations (they are all executed in the compartment of the 
+The R2D Access Server provides an interface compliant to HL7/FHIR, it implements
+a small subset of the whole FHIR Restful APIs specification. This is the list
+of the provided operations (they are all executed in the compartment of the
 authenticated citizen):
 1) Search of Encounter
 2) Search of Observation
@@ -44,7 +44,4 @@ all data needed to access the produced data.
 
 The R2DAccess Server has a security layer based on eIDAS, it only allows requests having
 a valid eIDAS Token. The citizen referenced by the eIDAS Token MUST be identified by the
-HCO using name, surname and date of birth. 
-
-
-
+HCO using name, surname and date of birth.
