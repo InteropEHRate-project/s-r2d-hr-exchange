@@ -5,12 +5,13 @@ an Healthcare Organization (HCO) to allow a citizen to import his / her
 health data on the mobile phone.
 
 
-The R2D Access Server is a customization of the HAPI Plain Restful Server
-in addition to its FHIR nature, the R2D Access Server provides uses a
-personal Spring context to load classes needed for
+The R2D Access Server is a customization of the HAPI Plain Restful Server.
+In addition to its FHIR nature, the R2D Access Server uses also a Spring 
+context to load classes needed for:
 1) managing persistence of data
 2) managing communication with the EHR Middleware
 3) signing the Provenance resources
+4) providing additional RESTful services
 
 
 The R2D Access Server provides an interface compliant to HL7/FHIR, it implements
@@ -36,11 +37,13 @@ authenticated citizen):
 The R2D Access Server forwards each incoming calls to another service provided by the
 HCO called EHR-Middleware, this service will retrieve data from the EHR of the HCO and
 will return them to the R2D Access Server in the FHIR / JSON format defined by the
-InteropEHRate Interoperability Implementation Guides. The whole transaction is executed
-in an asynchrnous way, the asynchrnicity is managed by the R2D Access Server, that replies
-with a 202 to the initial request and then provides to client an URL to be used for polling
-the status of the request. When the request ends, requesting the polling URL will return
-all data needed to access the produced data.
+InteropEHRate Interoperability Implementation Guides. 
+
+The whole transaction is executed in an asynchronous way, the asynchronicity is managed 
+directly by the R2D Access Server, that replies with a 202 to the initial request and 
+then provides to client an URL to be used for polling the status of the request. 
+When the request ends, requesting the polling URL will return all data needed to download 
+the produced data.
 
 The R2DAccess Server has a security layer based on eIDAS, it only allows requests having
 a valid eIDAS Token. The citizen referenced by the eIDAS Token MUST be identified by the
